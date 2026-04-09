@@ -686,7 +686,10 @@ function reconstructRoundBoundaries(competitors) {
         for (let i = 0; i < Math.min(N, ls.length); i++) {
           const raw = typeof ls[i] === "object" ? (ls[i].value ?? ls[i].displayValue) : ls[i];
           const v = parseInt(raw, 10);
-          if (!isNaN(v) && v > 0) { strokes += v; rounds++; hasAnyData = true; }
+          // Only count rounds that look COMPLETED. ESPN reports partial strokes mid-round
+          // (e.g. "10" through 2 holes) via the same value field, so we require a full-round
+          // realistic stroke count to treat it as a finished round.
+          if (!isNaN(v) && v >= 60 && v <= 100) { strokes += v; rounds++; hasAnyData = true; }
         }
         totalToPar += strokes - PAR * rounds;
       });
