@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>The Masters Pool 2026 🏆</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
 <style>
   :root {
     --masters-green: #006747;
@@ -226,6 +227,38 @@
     filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
   }
 
+  .chart-card {
+    background: linear-gradient(160deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+    border: 1px solid rgba(249, 224, 118, 0.25);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(10px);
+    margin: 30px 0;
+  }
+  .chart-card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: var(--masters-yellow);
+    margin-bottom: 4px;
+    text-align: center;
+  }
+  .chart-card .chart-subtitle {
+    text-align: center;
+    font-size: 12px;
+    opacity: 0.65;
+    margin-bottom: 18px;
+    letter-spacing: 0.3px;
+  }
+  .chart-wrap { position: relative; height: 320px; }
+  .chart-note {
+    text-align: center;
+    padding: 90px 20px;
+    opacity: 0.65;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
   .winner-bonus {
     background: rgba(0,0,0,0.3);
     border: 2px dashed var(--masters-gold);
@@ -304,6 +337,12 @@
     <div class="loading">Teeing off</div>
   </div>
 
+  <div class="chart-card">
+    <h2>Team Progress</h2>
+    <div class="chart-subtitle">Total to par over time · live snapshots every 2 min + end-of-round anchors</div>
+    <div class="chart-wrap"><canvas id="progressChart"></canvas></div>
+  </div>
+
   <footer>
     ⛳ Built with love for the 2026 Masters · Auto-refreshes every 2 minutes<br>
     Data from ESPN public leaderboard
@@ -349,6 +388,19 @@ const TEAMS = [
 ];
 
 const ESPN_URL = "https://site.api.espn.com/apis/site/v2/sports/golf/leaderboard";
+
+// ============ CHART CONFIG ============
+const PAR = 72; // Augusta National
+// Approximate round end times (7:30pm ET Thu/Fri, 6:30pm ET Sat/Sun)
+const ROUND_END_TIMES_UTC = [
+  '2026-04-09T23:30:00Z',
+  '2026-04-10T23:30:00Z',
+  '2026-04-11T22:30:00Z',
+  '2026-04-12T22:30:00Z'
+];
+const SNAPSHOT_KEY = 'mp2026_snapshots_v1';
+const MAX_SNAPSHOTS = 600;
+const TEAM_COLORS = { Tagan: '#f9e076', Jepic: '#4ade80', Bigra: '#f87171' };
 
 // ============ HELPERS ============
 function normalizeName(n) {
@@ -511,6 +563,8 @@ async function load() {
     renderBonus(tourneyLeader, teamResults);
 
     renderStandings(teamResults, leader, ranked);
+    recordSnapshot(teamResults);
+    renderChart(teamResults, competitors);
   } catch (err) {
     console.error(err);
     statusBar.innerHTML = `<span class="error">⚠ Couldn't load live scores (${err.message}). Retrying in 2 min.</span>`;
@@ -584,6 +638,204 @@ function renderStandings(teams, leader, ranked) {
       <ul class="golfers">${golferRows}</ul>
     `;
     container.appendChild(card);
+  });
+}
+
+// ============ CHART: SNAPSHOTS + RECONSTRUCTION ============
+function loadSnapshots() {
+  try { return JSON.parse(localStorage.getItem(SNAPSHOT_KEY) || "[]"); }
+  catch (e) { return []; }
+}
+function saveSnapshots(arr) {
+  try { localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(arr)); } catch (e) {}
+}
+function recordSnapshot(teamResults) {
+  const snaps = loadSnapshots();
+  const t = Date.now();
+  const entry = {
+    t,
+    teams: teamResults.map(tr => ({ name: tr.name, toPar: tr.totalToPar }))
+  };
+  // Skip if last snapshot is identical and very recent (<60s)
+  const last = snaps[snaps.length - 1];
+  if (last && (t - last.t) < 60000 && JSON.stringify(last.teams) === JSON.stringify(entry.teams)) return;
+  // Skip pre-tournament zeros so the chart doesn't start with a flat-at-E line
+  const anyNonZero = entry.teams.some(t => t.toPar !== 0);
+  const anyRealData = teamResults.some(tr => tr.totalStrokes > 0);
+  if (!anyNonZero && !anyRealData) return;
+  snaps.push(entry);
+  while (snaps.length > MAX_SNAPSHOTS) snaps.shift();
+  saveSnapshots(snaps);
+}
+
+function reconstructRoundBoundaries(competitors) {
+  // For each completed round N, sum each golfer's through-R-N to-par from linescores.
+  // A round is considered "complete enough" to plot once every team has at least
+  // one golfer with a linescore for that round.
+  const boundaries = [];
+  for (let N = 1; N <= 4; N++) {
+    const teamPoints = TEAMS.map(team => {
+      let totalToPar = 0;
+      let hasAnyData = false;
+      team.golfers.forEach(name => {
+        const c = findCompetitor(name, competitors);
+        if (!c) return;
+        const ls = c.linescores || [];
+        let strokes = 0;
+        let rounds = 0;
+        for (let i = 0; i < Math.min(N, ls.length); i++) {
+          const raw = typeof ls[i] === "object" ? (ls[i].value ?? ls[i].displayValue) : ls[i];
+          const v = parseInt(raw, 10);
+          if (!isNaN(v) && v > 0) { strokes += v; rounds++; hasAnyData = true; }
+        }
+        totalToPar += strokes - PAR * rounds;
+      });
+      return hasAnyData ? { name: team.name, toPar: totalToPar } : null;
+    });
+    if (teamPoints.every(tp => tp !== null)) {
+      boundaries.push({
+        t: new Date(ROUND_END_TIMES_UTC[N - 1]).getTime(),
+        teams: teamPoints,
+        boundary: true
+      });
+    } else {
+      break;
+    }
+  }
+  return boundaries;
+}
+
+let progressChartInstance = null;
+function renderChart(teamResults, competitors) {
+  const canvas = document.getElementById("progressChart");
+  if (!canvas || typeof Chart === "undefined") return;
+  const wrap = canvas.parentElement;
+
+  const boundaries = reconstructRoundBoundaries(competitors);
+  const snaps = loadSnapshots();
+  const allPoints = [...boundaries, ...snaps].sort((a, b) => a.t - b.t);
+
+  // Need at least 2 points per team to draw a meaningful line
+  const teamPointCounts = TEAMS.map(tm =>
+    allPoints.filter(p => p.teams.some(x => x.name === tm.name)).length
+  );
+  const maxPts = Math.max(...teamPointCounts);
+
+  let note = wrap.querySelector(".chart-note");
+  if (maxPts < 2) {
+    canvas.style.display = "none";
+    if (!note) {
+      note = document.createElement("div");
+      note.className = "chart-note";
+      wrap.appendChild(note);
+    }
+    note.textContent =
+      "Collecting data — the chart fills in as rounds progress. First live snapshot lands within 2 minutes, and end-of-round anchors appear as each round wraps up.";
+    return;
+  }
+  if (note) note.remove();
+  canvas.style.display = "";
+
+  const datasets = TEAMS.map(team => ({
+    label: team.name,
+    data: allPoints
+      .map(p => {
+        const found = p.teams.find(x => x.name === team.name);
+        return found ? { x: p.t, y: found.toPar } : null;
+      })
+      .filter(d => d !== null),
+    borderColor: TEAM_COLORS[team.name],
+    backgroundColor: TEAM_COLORS[team.name] + "33",
+    borderWidth: 2.5,
+    tension: 0.25,
+    pointRadius: 3,
+    pointHoverRadius: 6,
+    fill: false
+  }));
+
+  if (progressChartInstance) {
+    progressChartInstance.data.datasets = datasets;
+    progressChartInstance.update("none");
+    return;
+  }
+
+  progressChartInstance = new Chart(canvas, {
+    type: "line",
+    data: { datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      parsing: false,
+      interaction: { mode: "nearest", intersect: false },
+      plugins: {
+        legend: {
+          labels: {
+            color: "#fdf8e8",
+            font: { family: "Inter", size: 13, weight: "600" },
+            usePointStyle: true,
+            padding: 16
+          }
+        },
+        tooltip: {
+          backgroundColor: "rgba(0,36,24,0.95)",
+          borderColor: "#f9e076",
+          borderWidth: 1,
+          titleColor: "#f9e076",
+          bodyColor: "#fdf8e8",
+          padding: 10,
+          callbacks: {
+            title: items =>
+              new Date(items[0].parsed.x).toLocaleString([], {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit"
+              }),
+            label: item => {
+              const v = item.parsed.y;
+              const disp = v === 0 ? "E" : v > 0 ? "+" + v : "" + v;
+              return `${item.dataset.label}: ${disp}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: "linear",
+          ticks: {
+            color: "rgba(253,248,232,0.7)",
+            font: { size: 11 },
+            maxRotation: 0,
+            autoSkipPadding: 20,
+            callback: v => {
+              const d = new Date(v);
+              const now = new Date();
+              const sameDay = d.toDateString() === now.toDateString();
+              return sameDay
+                ? d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+                : d.toLocaleDateString([], { weekday: "short" }) +
+                    " " +
+                    d.toLocaleTimeString([], { hour: "numeric" });
+            }
+          },
+          grid: { color: "rgba(255,255,255,0.05)" }
+        },
+        y: {
+          title: {
+            display: true,
+            text: "Total To Par  (lower is better)",
+            color: "rgba(253,248,232,0.85)",
+            font: { size: 12 }
+          },
+          ticks: {
+            color: "rgba(253,248,232,0.7)",
+            callback: v => (v === 0 ? "E" : v > 0 ? "+" + v : "" + v)
+          },
+          grid: { color: "rgba(255,255,255,0.08)" }
+        }
+      }
+    }
   });
 }
 
