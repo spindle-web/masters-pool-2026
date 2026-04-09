@@ -673,7 +673,13 @@ function reconstructRoundBoundaries(competitors) {
   // A round is considered "complete enough" to plot once every team has at least
   // one golfer with a linescore for that round.
   const boundaries = [];
+  const nowMs = Date.now();
   for (let N = 1; N <= 4; N++) {
+    // Only emit a boundary once the round's scheduled end time has passed. Before then
+    // most golfers haven't finished, so a "team total" would be based on a handful of
+    // early-wave finishers and would wildly misrepresent the round.
+    const roundEndMs = new Date(ROUND_END_TIMES_UTC[N - 1]).getTime();
+    if (nowMs < roundEndMs) break;
     const teamPoints = TEAMS.map(team => {
       let totalToPar = 0;
       let hasAnyData = false;
