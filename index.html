@@ -156,10 +156,19 @@
   }
   .team-total .score {
     font-family: 'Playfair Display', serif;
-    font-size: 42px;
+    font-size: 52px;
     font-weight: 900;
     color: var(--white);
     line-height: 1;
+  }
+  .team-total .score.big-par.under { color: #4ade80; }
+  .team-total .score.big-par.over { color: #f87171; }
+  .team-total .score.big-par.even { color: var(--cream); }
+  .team-total .sub-strokes {
+    font-size: 13px;
+    margin-top: 6px;
+    opacity: 0.7;
+    letter-spacing: 0.5px;
   }
   .team-total .to-par {
     font-size: 16px;
@@ -173,7 +182,7 @@
   .golfers { list-style: none; }
   .golfer {
     display: grid;
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: 1fr auto auto auto;
     gap: 10px;
     align-items: center;
     padding: 10px 8px;
@@ -183,6 +192,14 @@
   .golfer:last-child { border-bottom: none; }
   .golfer-name { font-weight: 600; }
   .golfer-pos { opacity: 0.7; font-size: 12px; min-width: 30px; text-align: right; }
+  .golfer-thru {
+    opacity: 0.75;
+    font-size: 11px;
+    min-width: 54px;
+    text-align: right;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
   .golfer-score {
     font-weight: 700;
     min-width: 42px;
@@ -365,6 +382,21 @@ function getGolferData(competitor) {
   const position = status.position?.displayName || status.position?.id || "—";
   const cut = /(CUT|WD|DQ)/i.test(position) || status.displayValue === "CUT";
 
+  // Holes played on the day (current round)
+  let thru = "";
+  const stateName = status.type?.state || "";
+  if (stateName === "post" || status.type?.completed) {
+    thru = "F";
+  } else if (typeof status.thru === "number" && status.thru > 0) {
+    thru = status.thru === 18 ? "F" : `Thru ${status.thru}`;
+  } else if (status.teeTime) {
+    // hasn't teed off yet — show local tee time
+    try {
+      const d = new Date(status.teeTime);
+      thru = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    } catch (e) { thru = ""; }
+  }
+
   // Total strokes: sum linescores (only count rounds actually played)
   let strokes = 0;
   const linescores = competitor.linescores || [];
@@ -395,6 +427,7 @@ function getGolferData(competitor) {
     strokes: strokes || null,
     toPar,
     position,
+    thru,
     cut
   };
 }
@@ -428,10 +461,10 @@ async function load() {
       return { ...team, golferData, totalStrokes, totalToPar };
     });
 
-    // Rank: lowest totalStrokes wins (tiebreak by toPar)
+    // Rank: lowest total-to-par wins live (meaningful mid-round), strokes as tiebreak
     const ranked = [...teamResults].sort((a, b) => {
-      if (a.totalStrokes !== b.totalStrokes) return a.totalStrokes - b.totalStrokes;
-      return a.totalToPar - b.totalToPar;
+      if (a.totalToPar !== b.totalToPar) return a.totalToPar - b.totalToPar;
+      return a.totalStrokes - b.totalStrokes;
     });
     const leader = ranked[0];
 
@@ -486,17 +519,18 @@ function renderStandings(teams, leader, ranked) {
   // render in original order but mark leader
   teams.forEach(team => {
     const rank = ranked.findIndex(r => r.name === team.name) + 1;
-    const isLeader = team.name === leader.name && team.totalStrokes > 0;
+    const isLeader = team.name === leader.name && (team.totalStrokes > 0 || team.totalToPar < 0);
     const card = document.createElement("div");
     card.className = "team-card" + (isLeader ? " leader" : "");
 
     const golferRows = team.golferData.map(g => {
-      const scoreDisplay = g.strokes ? g.strokes : (g.cut ? "CUT" : "—");
       const parDisplay = g.toPar !== null ? formatToPar(g.toPar) : "";
+      const thruDisplay = g.thru || "";
       return `
         <li class="golfer ${g.cut ? 'cut' : ''}">
           <span class="golfer-name">${g.name}</span>
           <span class="golfer-pos">${g.position}</span>
+          <span class="golfer-thru">${thruDisplay}</span>
           <span class="golfer-score to-par ${toParClass(g.toPar)}">${parDisplay}</span>
         </li>`;
     }).join("");
@@ -507,9 +541,9 @@ function renderStandings(teams, leader, ranked) {
         <div class="team-rank">${rank === 1 ? '1st' : rank === 2 ? '2nd' : '3rd'} place</div>
       </div>
       <div class="team-total">
-        <div class="label">Total Strokes</div>
-        <div class="score">${team.totalStrokes || '—'}</div>
-        <div class="to-par ${toParClass(team.totalToPar)}">${formatToPar(team.totalToPar)} to par</div>
+        <div class="label">Total To Par</div>
+        <div class="score big-par ${toParClass(team.totalToPar)}">${formatToPar(team.totalToPar)}</div>
+        <div class="sub-strokes">${team.totalStrokes || '—'} total strokes</div>
       </div>
       <ul class="golfers">${golferRows}</ul>
     `;
