@@ -30,16 +30,33 @@
   }
   .container { max-width: 1200px; margin: 0 auto; }
 
+  .hero {
+    max-width: 1200px;
+    margin: 0 auto 0;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+    border: 1px solid rgba(249, 224, 118, 0.35);
+    position: relative;
+    aspect-ratio: 16 / 6;
+    background: #003d2b url("https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/AugustaNationalMastersLogoFlowers.jpg/1280px-AugustaNationalMastersLogoFlowers.jpg") center/cover no-repeat;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,36,24,0.1) 0%, rgba(0,36,24,0.75) 100%);
+  }
   header {
     text-align: center;
-    padding: 40px 20px 30px;
+    padding: 30px 20px 20px;
     position: relative;
   }
   header::before {
     content: '⛳';
-    font-size: 60px;
+    font-size: 54px;
     display: block;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
   }
   h1 {
@@ -209,6 +226,12 @@
   }
   .golfer.cut .golfer-name { opacity: 0.4; text-decoration: line-through; }
   .golfer.cut .golfer-score { color: #f87171; }
+  .shame {
+    display: inline-block;
+    margin-right: 2px;
+    font-size: 14px;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+  }
 
   .winner-bonus {
     background: rgba(0,0,0,0.3);
@@ -263,11 +286,13 @@
   @media (max-width: 640px) {
     .team-name { font-size: 22px; }
     .team-total .score { font-size: 34px; }
+    .hero { aspect-ratio: 16 / 9; }
   }
 </style>
 </head>
 <body>
 <div class="container">
+  <div class="hero"></div>
   <header>
     <h1>The Masters Pool</h1>
     <div class="subtitle">Augusta National · 2026</div>
@@ -468,6 +493,24 @@ async function load() {
     });
     const leader = ranked[0];
 
+    // Shame list: top 3 golfers by worst to-par across all teams (must have started)
+    const allGolfers = [];
+    teamResults.forEach(t => t.golferData.forEach(g => {
+      if (g.toPar !== null && g.toPar !== undefined) {
+        allGolfers.push(g);
+      }
+    }));
+    const shameSet = new Set(
+      [...allGolfers]
+        .sort((a, b) => b.toPar - a.toPar)
+        .slice(0, 3)
+        .filter(g => g.toPar > 0) // only shame if actually over par
+        .map(g => g.name)
+    );
+    teamResults.forEach(t => t.golferData.forEach(g => {
+      g.shame = shameSet.has(g.name);
+    }));
+
     // Tournament leader bonus check
     const tourneyLeader = competitors.find(c => {
       const pos = c.status?.position?.displayName || "";
@@ -526,9 +569,10 @@ function renderStandings(teams, leader, ranked) {
     const golferRows = team.golferData.map(g => {
       const parDisplay = g.toPar !== null ? formatToPar(g.toPar) : "";
       const thruDisplay = g.thru || "";
+      const shameEmoji = g.shame ? '<span class="shame" title="Bottom 3 this round">😂</span> ' : '';
       return `
         <li class="golfer ${g.cut ? 'cut' : ''}">
-          <span class="golfer-name">${g.name}</span>
+          <span class="golfer-name">${shameEmoji}${g.name}</span>
           <span class="golfer-pos">${g.position}</span>
           <span class="golfer-thru">${thruDisplay}</span>
           <span class="golfer-score to-par ${toParClass(g.toPar)}">${parDisplay}</span>
