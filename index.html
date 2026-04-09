@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Masters Pool 2026 🏆</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --masters-green: #006747;
+    --masters-dark: #003d2b;
+    --masters-darker: #002418;
+    --masters-yellow: #f9e076;
+    --masters-gold: #d4a83a;
+    --cream: #fdf8e8;
+    --white: #ffffff;
+    --red: #c8102e;
+    --shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background:
+      radial-gradient(ellipse at top, #0a8a5a 0%, transparent 60%),
+      linear-gradient(180deg, var(--masters-dark) 0%, var(--masters-darker) 100%);
+    background-attachment: fixed;
+    color: var(--cream);
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+
+  header {
+    text-align: center;
+    padding: 40px 20px 30px;
+    position: relative;
+  }
+  header::before {
+    content: '⛳';
+    font-size: 60px;
+    display: block;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+  }
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 6vw, 64px);
+    color: var(--masters-yellow);
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    font-size: 18px;
+    color: var(--cream);
+    opacity: 0.85;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .pot-banner {
+    display: inline-block;
+    margin-top: 20px;
+    background: linear-gradient(135deg, var(--masters-gold), var(--masters-yellow));
+    color: var(--masters-darker);
+    padding: 12px 32px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 18px;
+    box-shadow: var(--shadow);
+  }
+  .rules {
+    background: rgba(0,0,0,0.25);
+    border-left: 4px solid var(--masters-yellow);
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin: 20px auto;
+    max-width: 800px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .rules strong { color: var(--masters-yellow); }
+
+  .status-bar {
+    text-align: center;
+    margin: 20px 0;
+    font-size: 13px;
+    opacity: 0.7;
+  }
+  .status-bar .live { color: #4ade80; }
+  .status-bar .error { color: #f87171; }
+
+  .standings {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 24px;
+    margin: 30px 0;
+  }
+  .team-card {
+    background: linear-gradient(160deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+    border: 1px solid rgba(249, 224, 118, 0.25);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(10px);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .team-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.25); }
+  .team-card.leader {
+    border-color: var(--masters-yellow);
+    background: linear-gradient(160deg, rgba(249, 224, 118, 0.18), rgba(255,255,255,0.03));
+  }
+  .team-card.leader::before {
+    content: '🏆 LEADING';
+    position: absolute;
+    top: 12px;
+    right: -32px;
+    background: var(--masters-yellow);
+    color: var(--masters-darker);
+    padding: 4px 36px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    transform: rotate(35deg);
+  }
+  .team-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid rgba(249, 224, 118, 0.2);
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+  }
+  .team-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: var(--masters-yellow);
+    font-weight: 700;
+  }
+  .team-rank { font-size: 14px; opacity: 0.7; }
+  .team-total {
+    text-align: center;
+    margin: 14px 0;
+    padding: 14px;
+    background: rgba(0,0,0,0.25);
+    border-radius: 10px;
+  }
+  .team-total .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    opacity: 0.7;
+    margin-bottom: 4px;
+  }
+  .team-total .score {
+    font-family: 'Playfair Display', serif;
+    font-size: 42px;
+    font-weight: 900;
+    color: var(--white);
+    line-height: 1;
+  }
+  .team-total .to-par {
+    font-size: 16px;
+    margin-top: 4px;
+    font-weight: 600;
+  }
+  .to-par.under { color: #4ade80; }
+  .to-par.over { color: #f87171; }
+  .to-par.even { color: var(--cream); }
+
+  .golfers { list-style: none; }
+  .golfer {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 14px;
+  }
+  .golfer:last-child { border-bottom: none; }
+  .golfer-name { font-weight: 600; }
+  .golfer-pos { opacity: 0.7; font-size: 12px; min-width: 30px; text-align: right; }
+  .golfer-score {
+    font-weight: 700;
+    min-width: 42px;
+    text-align: right;
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+  }
+  .golfer.cut .golfer-name { opacity: 0.4; text-decoration: line-through; }
+  .golfer.cut .golfer-score { color: #f87171; }
+
+  .winner-bonus {
+    background: rgba(0,0,0,0.3);
+    border: 2px dashed var(--masters-gold);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    margin: 30px 0;
+  }
+  .winner-bonus h3 {
+    font-family: 'Playfair Display', serif;
+    color: var(--masters-yellow);
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+  .winner-bonus .current {
+    font-size: 15px;
+    opacity: 0.9;
+  }
+  .winner-bonus .bonus-name {
+    color: var(--masters-yellow);
+    font-weight: 700;
+  }
+
+  footer {
+    text-align: center;
+    padding: 30px 0 10px;
+    opacity: 0.5;
+    font-size: 12px;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 60px 20px;
+    font-size: 18px;
+    opacity: 0.7;
+  }
+  .loading::after {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--masters-yellow);
+    border-top-color: transparent;
+    border-radius: 50%;
+    margin-left: 10px;
+    animation: spin 1s linear infinite;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 640px) {
+    .team-name { font-size: 22px; }
+    .team-total .score { font-size: 34px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>The Masters Pool</h1>
+    <div class="subtitle">Augusta National · 2026</div>
+    <div class="pot-banner">💰 $75 Pot · Lowest Total Wins</div>
+    <div class="rules">
+      <strong>The Rules:</strong> Each player drafted 6 golfers for $25. Lowest combined total strokes wins the $75 pot.
+      <strong>Bonus:</strong> If a player's drafted golfer wins the Masters, the other two owe them $10 each.
+      Cut golfers are counted but greyed out — their rounds still contribute to your total.
+    </div>
+  </header>
+
+  <div class="status-bar" id="statusBar">Loading live scores…</div>
+
+  <div id="bonusBanner"></div>
+
+  <div class="standings" id="standings">
+    <div class="loading">Teeing off</div>
+  </div>
+
+  <footer>
+    ⛳ Built with love for the 2026 Masters · Auto-refreshes every 2 minutes<br>
+    Data from ESPN public leaderboard
+  </footer>
+</div>
+
+<script>
+// ============ POOL DATA ============
+const TEAMS = [
+  {
+    name: "Tagan",
+    golfers: [
+      "Scottie Scheffler",
+      "Jon Rahm",
+      "Matt Fitzpatrick",
+      "Justin Rose",
+      "Tommy Fleetwood",
+      "Akshay Bhatia"
+    ]
+  },
+  {
+    name: "Jepic",
+    golfers: [
+      "Bryson DeChambeau",
+      "Cameron Young",
+      "Xander Schauffele",
+      "Patrick Reed",
+      "Jordan Spieth",
+      "Brooks Koepka"
+    ]
+  },
+  {
+    name: "Bigra",
+    golfers: [
+      "Rory McIlroy",
+      "Ludvig Aberg",
+      "Collin Morikawa",
+      "Viktor Hovland",
+      "Si Woo Kim",
+      "Min Woo Lee"
+    ]
+  }
+];
+
+const ESPN_URL = "https://site.api.espn.com/apis/site/v2/sports/golf/mens-masters/leaderboard";
+
+// ============ HELPERS ============
+function normalizeName(n) {
+  return n.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // strip accents
+    .replace(/[^a-z ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function findCompetitor(name, competitors) {
+  const target = normalizeName(name);
+  // exact match first
+  let c = competitors.find(x => normalizeName(x.athlete?.displayName || "") === target);
+  if (c) return c;
+  // last name + first initial fallback
+  const parts = target.split(" ");
+  const last = parts[parts.length - 1];
+  const firstInit = parts[0][0];
+  c = competitors.find(x => {
+    const n = normalizeName(x.athlete?.displayName || "");
+    const p = n.split(" ");
+    return p[p.length - 1] === last && p[0][0] === firstInit;
+  });
+  return c;
+}
+
+function parseToPar(str) {
+  if (!str || str === "E" || str === "-") return 0;
+  return parseInt(str, 10) || 0;
+}
+
+function formatToPar(n) {
+  if (n === 0) return "E";
+  return n > 0 ? `+${n}` : `${n}`;
+}
+
+function toParClass(n) {
+  if (n < 0) return "under";
+  if (n > 0) return "over";
+  return "even";
+}
+
+function getGolferData(competitor) {
+  if (!competitor) return { strokes: null, toPar: null, position: "—", cut: false };
+
+  const status = competitor.status || {};
+  const position = status.position?.displayName || status.position?.id || "—";
+  const cut = /(CUT|WD|DQ)/i.test(position) || status.displayValue === "CUT";
+
+  // Total strokes: sum linescores
+  let strokes = 0;
+  const linescores = competitor.linescores || [];
+  linescores.forEach(ls => {
+    const v = parseInt(ls.value, 10);
+    if (!isNaN(v)) strokes += v;
+  });
+
+  // score to par
+  let toPar = 0;
+  if (competitor.score !== undefined) {
+    if (typeof competitor.score === "string") toPar = parseToPar(competitor.score);
+    else if (typeof competitor.score === "number") toPar = competitor.score;
+  }
+  // fallback: statistics array
+  if (toPar === 0 && competitor.statistics) {
+    const sc = competitor.statistics.find(s => s.name === "scoreToPar" || s.abbreviation === "TO PAR");
+    if (sc) toPar = parseToPar(sc.displayValue);
+  }
+
+  return {
+    strokes: strokes || null,
+    toPar,
+    position,
+    cut
+  };
+}
+
+// ============ RENDER ============
+async function load() {
+  const statusBar = document.getElementById("statusBar");
+  try {
+    const resp = await fetch(ESPN_URL, { cache: "no-store" });
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    const data = await resp.json();
+
+    const event = data.events?.[0];
+    const comp = event?.competitions?.[0];
+    const competitors = comp?.competitors || [];
+
+    if (!competitors.length) throw new Error("No competitor data yet");
+
+    const round = comp?.status?.period || 1;
+    const tournamentState = comp?.status?.type?.description || "";
+    statusBar.innerHTML = `<span class="live">● LIVE</span> · Round ${round} · ${tournamentState} · Updated ${new Date().toLocaleTimeString()}`;
+
+    // Build team standings
+    const teamResults = TEAMS.map(team => {
+      const golferData = team.golfers.map(name => {
+        const c = findCompetitor(name, competitors);
+        return { name, ...getGolferData(c) };
+      });
+      const totalStrokes = golferData.reduce((s, g) => s + (g.strokes || 0), 0);
+      const totalToPar = golferData.reduce((s, g) => s + (g.toPar || 0), 0);
+      return { ...team, golferData, totalStrokes, totalToPar };
+    });
+
+    // Rank: lowest totalStrokes wins (tiebreak by toPar)
+    const ranked = [...teamResults].sort((a, b) => {
+      if (a.totalStrokes !== b.totalStrokes) return a.totalStrokes - b.totalStrokes;
+      return a.totalToPar - b.totalToPar;
+    });
+    const leader = ranked[0];
+
+    // Tournament leader bonus check
+    const tourneyLeader = competitors.find(c => {
+      const pos = c.status?.position?.displayName || "";
+      return pos === "1" || pos === "T1";
+    });
+    renderBonus(tourneyLeader, teamResults);
+
+    renderStandings(teamResults, leader, ranked);
+  } catch (err) {
+    console.error(err);
+    statusBar.innerHTML = `<span class="error">⚠ Couldn't load live scores (${err.message}). Retrying in 2 min.</span>`;
+    document.getElementById("standings").innerHTML = `
+      <div class="loading" style="grid-column: 1 / -1;">
+        Live feed unavailable. This usually resolves itself — the ESPN API can briefly go down.
+      </div>`;
+  }
+}
+
+function renderBonus(tourneyLeader, teamResults) {
+  const banner = document.getElementById("bonusBanner");
+  if (!tourneyLeader) { banner.innerHTML = ""; return; }
+  const leaderName = tourneyLeader.athlete?.displayName || "";
+  const owningTeam = teamResults.find(t =>
+    t.golfers.some(g => normalizeName(g) === normalizeName(leaderName))
+  );
+  if (owningTeam) {
+    banner.innerHTML = `
+      <div class="winner-bonus">
+        <h3>💸 Bonus Payout On Deck</h3>
+        <div class="current">
+          <span class="bonus-name">${leaderName}</span> currently leads the tournament —
+          if they win, <span class="bonus-name">${owningTeam.name}</span> collects an extra <strong>$20</strong> ($10 from each other player).
+        </div>
+      </div>`;
+  } else {
+    banner.innerHTML = `
+      <div class="winner-bonus">
+        <h3>🤷 No Bonus In Play</h3>
+        <div class="current">
+          <span class="bonus-name">${leaderName}</span> currently leads the tournament and isn't on anyone's team — no bonus payout if they win.
+        </div>
+      </div>`;
+  }
+}
+
+function renderStandings(teams, leader, ranked) {
+  const container = document.getElementById("standings");
+  container.innerHTML = "";
+  // render in original order but mark leader
+  teams.forEach(team => {
+    const rank = ranked.findIndex(r => r.name === team.name) + 1;
+    const isLeader = team.name === leader.name && team.totalStrokes > 0;
+    const card = document.createElement("div");
+    card.className = "team-card" + (isLeader ? " leader" : "");
+
+    const golferRows = team.golferData.map(g => {
+      const scoreDisplay = g.strokes ? g.strokes : (g.cut ? "CUT" : "—");
+      const parDisplay = g.toPar !== null ? formatToPar(g.toPar) : "";
+      return `
+        <li class="golfer ${g.cut ? 'cut' : ''}">
+          <span class="golfer-name">${g.name}</span>
+          <span class="golfer-pos">${g.position}</span>
+          <span class="golfer-score to-par ${toParClass(g.toPar)}">${parDisplay}</span>
+        </li>`;
+    }).join("");
+
+    card.innerHTML = `
+      <div class="team-header">
+        <div class="team-name">${team.name}</div>
+        <div class="team-rank">${rank === 1 ? '1st' : rank === 2 ? '2nd' : '3rd'} place</div>
+      </div>
+      <div class="team-total">
+        <div class="label">Total Strokes</div>
+        <div class="score">${team.totalStrokes || '—'}</div>
+        <div class="to-par ${toParClass(team.totalToPar)}">${formatToPar(team.totalToPar)} to par</div>
+      </div>
+      <ul class="golfers">${golferRows}</ul>
+    `;
+    container.appendChild(card);
+  });
+}
+
+load();
+setInterval(load, 2 * 60 * 1000); // refresh every 2 minutes
+</script>
+</body>
+</html>
