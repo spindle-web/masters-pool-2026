@@ -314,7 +314,7 @@ const TEAMS = [
   }
 ];
 
-const ESPN_URL = "https://site.api.espn.com/apis/site/v2/sports/golf/mens-masters/leaderboard";
+const ESPN_URL = "https://site.api.espn.com/apis/site/v2/sports/golf/leaderboard";
 
 // ============ HELPERS ============
 function normalizeName(n) {
@@ -365,24 +365,30 @@ function getGolferData(competitor) {
   const position = status.position?.displayName || status.position?.id || "—";
   const cut = /(CUT|WD|DQ)/i.test(position) || status.displayValue === "CUT";
 
-  // Total strokes: sum linescores
+  // Total strokes: sum linescores (only count rounds actually played)
   let strokes = 0;
   const linescores = competitor.linescores || [];
   linescores.forEach(ls => {
-    const v = parseInt(ls.value, 10);
-    if (!isNaN(v)) strokes += v;
+    const raw = typeof ls === "object" ? (ls.value ?? ls.displayValue) : ls;
+    const v = parseInt(raw, 10);
+    if (!isNaN(v) && v > 0) strokes += v;
   });
 
-  // score to par
+  // score to par — prefer statistics.scoreToPar.value (reliable integer),
+  // then fall back to score.displayValue string form like "E", "-3", "+2"
   let toPar = 0;
-  if (competitor.score !== undefined) {
-    if (typeof competitor.score === "string") toPar = parseToPar(competitor.score);
-    else if (typeof competitor.score === "number") toPar = competitor.score;
-  }
-  // fallback: statistics array
-  if (toPar === 0 && competitor.statistics) {
-    const sc = competitor.statistics.find(s => s.name === "scoreToPar" || s.abbreviation === "TO PAR");
-    if (sc) toPar = parseToPar(sc.displayValue);
+  const stats = competitor.statistics || [];
+  const stpStat = stats.find(s => s && (s.name === "scoreToPar" || s.abbreviation === "TO PAR"));
+  if (stpStat && typeof stpStat.value === "number") {
+    toPar = stpStat.value;
+  } else {
+    const sc = competitor.score;
+    if (typeof sc === "string") toPar = parseToPar(sc);
+    else if (typeof sc === "number") toPar = sc;
+    else if (sc && typeof sc === "object") {
+      if (typeof sc.displayValue === "string") toPar = parseToPar(sc.displayValue);
+      else if (typeof sc.value === "number") toPar = sc.value;
+    }
   }
 
   return {
