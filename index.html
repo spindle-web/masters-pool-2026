@@ -462,6 +462,105 @@
   }
   .weather-strip .wx-loading { opacity: 0.6; font-style: italic; }
 
+  /* ============ TOURNAMENT LEADERBOARD ============ */
+  .tourney-board {
+    max-width: 700px;
+    margin: 20px auto;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(249, 224, 118, 0.2);
+    border-radius: 12px;
+    backdrop-filter: blur(6px);
+    overflow: hidden;
+  }
+  .tourney-board summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+  .tourney-board summary::-webkit-details-marker { display: none; }
+  .tourney-board summary::before {
+    content: "▸";
+    margin-right: 10px;
+    color: var(--masters-yellow);
+    transition: transform 0.2s;
+    display: inline-block;
+  }
+  .tourney-board[open] summary::before { transform: rotate(90deg); }
+  .tb-title {
+    color: var(--masters-yellow);
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-size: 12px;
+    flex: 1;
+  }
+  .tb-hint {
+    font-size: 10px;
+    opacity: 0.5;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .tourney-board[open] .tb-hint { display: none; }
+  .tb-body {
+    padding: 4px 12px 12px;
+    border-top: 1px solid rgba(249, 224, 118, 0.15);
+  }
+  .tb-row {
+    display: grid;
+    grid-template-columns: 30px 1fr auto auto;
+    gap: 12px;
+    align-items: center;
+    padding: 7px 10px;
+    font-size: 13px;
+    border-radius: 6px;
+    border-left: 3px solid transparent;
+  }
+  .tb-row + .tb-row { margin-top: 2px; }
+  .tb-row .tb-pos {
+    font-weight: 700;
+    color: var(--masters-yellow);
+    font-size: 12px;
+    text-align: center;
+  }
+  .tb-row .tb-name {
+    font-weight: 600;
+    color: var(--cream);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tb-row .tb-thru {
+    font-size: 11px;
+    opacity: 0.65;
+    font-variant-numeric: tabular-nums;
+  }
+  .tb-row .tb-score {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    min-width: 36px;
+    text-align: right;
+  }
+  .tb-row.drafted {
+    background: rgba(255,255,255,0.04);
+  }
+  .tb-owner {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 1px 6px;
+    border-radius: 8px;
+    margin-left: 6px;
+    vertical-align: middle;
+    color: #0b1f10;
+    background: var(--masters-yellow);
+  }
+
   /* ============ SHARE BUTTON ============ */
   .share-section {
     text-align: center;
@@ -519,6 +618,14 @@
   <div id="bonusBanner"></div>
 
   <div id="cutLineBox"></div>
+
+  <details id="tourneyBoard" class="tourney-board">
+    <summary>
+      <span class="tb-title">🏆 Tournament Leaderboard · Top 10</span>
+      <span class="tb-hint">click to expand</span>
+    </summary>
+    <div id="tourneyBoardBody" class="tb-body"></div>
+  </details>
 
   <div class="share-section">
     <button class="share-btn" id="shareBtn">📸 Save Shareable Image</button>
@@ -833,6 +940,7 @@ async function load() {
 
     const cutLineInfo = computeProjectedCut(competitors);
     renderCutLineBanner(cutLineInfo, round);
+    renderTournamentLeaderboard(competitors);
     const hcByGolferId = await fetchHotCold();
     renderStandings(teamResults, leader, ranked, cutLineInfo, hcByGolferId);
     recordSnapshot(teamResults);
@@ -1443,6 +1551,78 @@ function renderCutLineBanner(cutLineInfo, tournamentRound) {
       ✂️ Projected cut line: <strong>${formatToPar(cutLineInfo.projected)}</strong>
       · At-risk golfers highlighted in orange
     </div>`;
+}
+
+// ---- Tournament leaderboard strip (top 10 of the Masters) ----
+function renderTournamentLeaderboard(competitors) {
+  const body = document.getElementById("tourneyBoardBody");
+  if (!body || !Array.isArray(competitors)) return;
+
+  // Build a name -> team name map for drafted-highlighting
+  const draftedMap = new Map();
+  for (const t of TEAMS) {
+    for (const g of t.golfers) {
+      draftedMap.set(normalizeName(g), t.name);
+    }
+  }
+
+  // Sort by numeric position, keep only those with a parsable position
+  const scored = competitors
+    .map(c => {
+      const status = c.status || {};
+      const posStr = status.position?.displayName || "";
+      const posNum = parseInt(posStr.replace(/\D/g, ""), 10);
+      return { c, status, posStr, posNum };
+    })
+    .filter(x => !isNaN(x.posNum) && x.posNum > 0 && !/(CUT|WD|DQ|MDF)/i.test(x.posStr))
+    .sort((a, b) => a.posNum - b.posNum);
+
+  // Take all ties that end at pos <= 10
+  const top = scored.filter(x => x.posNum <= 10);
+  if (top.length === 0) {
+    body.innerHTML = `<div style="padding:10px;opacity:0.6;font-size:12px;">Leaderboard not available yet.</div>`;
+    return;
+  }
+
+  const rows = top.map(({ c, status, posStr }) => {
+    const name = c.athlete?.displayName || "—";
+    const toPar = status.type?.state === "pre" ? null :
+                  (typeof c.score === "number" ? c.score :
+                   (status.statistics || []).find(s => s.name === "scoreToPar")?.value);
+    const scoreDisp = toPar == null ? "—" : formatToPar(toPar);
+    const scoreCls = toPar == null ? "" : toParClass(toPar);
+
+    // Thru / tee time
+    const stateStr = status.type?.state || "";
+    let thruDisp = "";
+    if (stateStr === "post") {
+      thruDisp = "F";
+    } else if (stateStr === "in") {
+      thruDisp = status.thru != null ? `thru ${status.thru}` : "live";
+    } else if (stateStr === "pre") {
+      thruDisp = status.type?.shortDetail || "—";
+    }
+
+    const owner = draftedMap.get(normalizeName(name));
+    const isDrafted = !!owner;
+    const color = owner ? TEAM_COLORS[owner] : null;
+    const style = isDrafted
+      ? `border-left-color:${color};background:${color}1a;`
+      : "";
+    const ownerBadge = owner
+      ? `<span class="tb-owner" style="background:${color};">${owner}</span>`
+      : "";
+
+    return `
+      <div class="tb-row ${isDrafted ? "drafted" : ""}" style="${style}">
+        <span class="tb-pos">${posStr}</span>
+        <span class="tb-name">${name}${ownerBadge}</span>
+        <span class="tb-thru">${thruDisp}</span>
+        <span class="tb-score to-par ${scoreCls}">${scoreDisp}</span>
+      </div>`;
+  }).join("");
+
+  body.innerHTML = rows;
 }
 
 // ---- Share card download ----
