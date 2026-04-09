@@ -6,6 +6,8 @@
 <title>The Masters Pool 2026 🏆</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
   :root {
     --masters-green: #006747;
@@ -309,10 +311,183 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* ============ PROGRESS BAR (holes remaining for current round) ============ */
+  .team-progress {
+    margin: 14px 0;
+    padding: 12px 14px 14px;
+    background: rgba(0,0,0,0.22);
+    border-radius: 10px;
+  }
+  .team-progress .pg-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    opacity: 0.75;
+    margin-bottom: 6px;
+  }
+  .team-progress .pg-remaining { color: var(--masters-yellow); font-weight: 700; }
+  .progress-track {
+    height: 8px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--masters-yellow), var(--masters-gold));
+    border-radius: 6px;
+    transition: width 0.6s ease;
+  }
+  .progress-fill.done {
+    background: linear-gradient(90deg, #4ade80, #22c55e);
+  }
+
+  /* ============ FINISHED GOLFER VISUAL ============ */
+  .golfer.round-done {
+    background: rgba(255,255,255,0.02);
+  }
+  .golfer.round-done .golfer-name {
+    opacity: 0.55;
+  }
+  .golfer.round-done .golfer-thru {
+    color: #4ade80;
+    font-weight: 700;
+    opacity: 1;
+  }
+  .golfer.pre-tee .golfer-name {
+    opacity: 0.75;
+  }
+  .golfer.pre-tee .golfer-thru {
+    color: var(--masters-yellow);
+    opacity: 0.85;
+  }
+  .golfer.on-course {
+    background: rgba(74, 222, 128, 0.04);
+    border-left: 2px solid #4ade80;
+    padding-left: 6px;
+  }
+
+  /* ============ CUT LINE BADGES ============ */
+  .cut-badge {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .cut-badge.safe   { background: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.4); }
+  .cut-badge.bubble { background: rgba(249, 224, 118, 0.15); color: var(--masters-yellow); border: 1px solid rgba(249,224,118,0.4); }
+  .cut-badge.danger { background: rgba(251, 146, 60, 0.15); color: #fb923c; border: 1px solid rgba(251,146,60,0.4); }
+  .cut-badge.missed { background: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.4); }
+
+  /* ============ HOT / COLD BADGES ============ */
+  .hc-badge {
+    display: inline-block;
+    font-size: 11px;
+    margin-left: 4px;
+    vertical-align: middle;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+    cursor: help;
+  }
+  .hc-badge.hot { color: #fb923c; }
+  .hc-badge.cold { color: #60a5fa; }
+
+  .hc-legend {
+    text-align: center;
+    font-size: 11px;
+    opacity: 0.7;
+    margin-top: 14px;
+    padding: 8px 12px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 6px;
+    letter-spacing: 0.2px;
+  }
+  .hc-legend strong { color: var(--cream); }
+
+  /* ============ CUT LINE INDICATOR ============ */
+  .cut-line-indicator {
+    text-align: center;
+    font-size: 12px;
+    padding: 10px 14px;
+    margin: 14px 0;
+    background: rgba(0,0,0,0.25);
+    border-radius: 8px;
+    border-left: 3px solid var(--masters-yellow);
+  }
+  .cut-line-indicator strong { color: var(--masters-yellow); }
+
+  /* ============ WEATHER STRIP ============ */
+  .weather-strip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(249, 224, 118, 0.2);
+    border-radius: 12px;
+    padding: 12px 20px;
+    margin: 20px auto;
+    max-width: 700px;
+    font-size: 13px;
+    backdrop-filter: blur(6px);
+  }
+  .weather-strip .wx-title {
+    color: var(--masters-yellow);
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-size: 11px;
+  }
+  .weather-strip .wx-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .weather-strip .wx-value {
+    font-weight: 700;
+    color: var(--cream);
+  }
+  .weather-strip .wx-loading { opacity: 0.6; font-style: italic; }
+
+  /* ============ SHARE BUTTON ============ */
+  .share-section {
+    text-align: center;
+    margin: 20px 0;
+  }
+  .share-btn {
+    background: linear-gradient(135deg, var(--masters-gold), var(--masters-yellow));
+    color: var(--masters-darker);
+    border: none;
+    padding: 12px 28px;
+    border-radius: 50px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .share-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+  }
+  .share-btn:active { transform: translateY(0); }
+  .share-btn:disabled { opacity: 0.6; cursor: wait; }
+
   @media (max-width: 640px) {
     .team-name { font-size: 22px; }
     .team-total .score { font-size: 34px; }
     header { padding: 50px 20px 40px; }
+    .weather-strip { gap: 10px; padding: 10px 14px; font-size: 12px; }
   }
 </style>
 </head>
@@ -326,21 +501,39 @@
   <div class="rules">
     <strong>The Rules:</strong> Each player drafted 6 golfers for $25. Lowest combined total strokes wins the $75 pot.
     <strong>Bonus:</strong> If a player's drafted golfer wins the Masters, the other two owe them $10 each.
-    Cut golfers are counted but greyed out — their rounds still contribute to your total.
+    <strong>Missed cut penalty:</strong> each cut golfer adds +3 to their team's total for both weekend rounds (+6 total).
+  </div>
+
+  <div class="weather-strip" id="weatherStrip">
+    <span class="wx-title">Augusta</span>
+    <span class="wx-loading">fetching weather…</span>
   </div>
 
   <div class="status-bar" id="statusBar">Loading live scores…</div>
 
   <div id="bonusBanner"></div>
 
-  <div class="standings" id="standings">
-    <div class="loading">Teeing off</div>
+  <div id="cutLineBox"></div>
+
+  <div class="share-section">
+    <button class="share-btn" id="shareBtn">📸 Save Shareable Image</button>
   </div>
 
-  <div class="chart-card">
-    <h2>Team Progress</h2>
-    <div class="chart-subtitle">Total to par over time · live snapshots every 2 min + end-of-round anchors</div>
-    <div class="chart-wrap"><canvas id="progressChart"></canvas></div>
+  <div id="shareableArea">
+    <div class="standings" id="standings">
+      <div class="loading">Teeing off</div>
+    </div>
+
+    <div class="chart-card">
+      <h2>Team Progress</h2>
+      <div class="chart-subtitle">Total to par over time · live snapshots every 2 min + end-of-round anchors · tap annotation pins for details</div>
+      <div class="chart-wrap"><canvas id="progressChart"></canvas></div>
+      <div class="hc-legend">
+        🔥 <strong>Hot</strong> = −2 or better over last 4 holes ·
+        ❄️ <strong>Cold</strong> = +2 or worse over last 4 holes ·
+        ✓ <strong>F</strong> = finished round · badges: <strong>Safe</strong>/<strong>Bubble</strong>/<strong>Danger</strong>/<strong>Missed</strong> show cut-line status
+      </div>
+    </div>
   </div>
 
   <footer>
@@ -402,6 +595,21 @@ const SNAPSHOT_KEY = 'mp2026_snapshots_v1';
 const MAX_SNAPSHOTS = 600;
 const TEAM_COLORS = { Tagan: '#f9e076', Jepic: '#4ade80', Bigra: '#f87171' };
 
+// ============ NEW FEATURE CONFIG ============
+const MISSED_CUT_PENALTY_PER_WEEKEND_ROUND = 3; // +3 strokes for Sat and Sun if cut
+const WORKER_URL = "https://masters-pool-notifier.spindle-web.workers.dev";
+const AUGUSTA_LAT = 33.5031;
+const AUGUSTA_LON = -82.0237;
+// Hot/Cold window (over the last 4 holes)
+const HC_WINDOW = 4;
+const HOT_THRESHOLD = -2; // <= -2 over last 4 holes = 🔥
+const COLD_THRESHOLD = 2; // >= +2 over last 4 holes = ❄️
+
+// Register chart annotation plugin if loaded
+if (typeof Chart !== "undefined" && typeof window["chartjs-plugin-annotation"] !== "undefined") {
+  Chart.register(window["chartjs-plugin-annotation"]);
+}
+
 // ============ HELPERS ============
 function normalizeName(n) {
   return n.toLowerCase()
@@ -445,38 +653,50 @@ function toParClass(n) {
 }
 
 function getGolferData(competitor) {
-  if (!competitor) return { strokes: null, toPar: null, position: "—", cut: false };
+  if (!competitor) {
+    return {
+      strokes: null, toPar: null, position: "—", thru: "",
+      cut: false, stateName: "pre", thruRaw: 0, roundDone: false,
+      onCourse: false, preTee: false, golferId: null,
+      roundStrokes: [null, null, null, null]
+    };
+  }
 
   const status = competitor.status || {};
   const position = status.position?.displayName || status.position?.id || "—";
-  const cut = /(CUT|WD|DQ)/i.test(position) || status.displayValue === "CUT";
+  const cut = /(CUT|WD|DQ|MDF)/i.test(position) || /cut/i.test(status.displayValue || "");
+  const stateName = status.type?.state || ""; // pre | in | post
 
   // Holes played on the day (current round)
   let thru = "";
-  const stateName = status.type?.state || "";
+  const thruRaw = typeof status.thru === "number" ? status.thru : 0;
   if (stateName === "post" || status.type?.completed) {
     thru = "F";
-  } else if (typeof status.thru === "number" && status.thru > 0) {
-    thru = status.thru === 18 ? "F" : `Thru ${status.thru}`;
+  } else if (thruRaw > 0) {
+    thru = thruRaw === 18 ? "F" : `Thru ${thruRaw}`;
   } else if (status.teeTime) {
-    // hasn't teed off yet — show local tee time
     try {
       const d = new Date(status.teeTime);
       thru = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
     } catch (e) { thru = ""; }
   }
 
-  // Total strokes: sum linescores (only count rounds actually played)
+  // Total strokes across all played rounds; also capture per-round strokes array
   let strokes = 0;
+  const roundStrokes = [null, null, null, null];
   const linescores = competitor.linescores || [];
   linescores.forEach(ls => {
     const raw = typeof ls === "object" ? (ls.value ?? ls.displayValue) : ls;
     const v = parseInt(raw, 10);
     if (!isNaN(v) && v > 0) strokes += v;
+    const period = (typeof ls === "object" ? ls.period : null) || null;
+    // Only treat as "round result" if value looks like a full round (60..100)
+    if (period && !isNaN(v) && v >= 60 && v <= 100) {
+      roundStrokes[period - 1] = v;
+    }
   });
 
-  // score to par — prefer statistics.scoreToPar.value (reliable integer),
-  // then fall back to score.displayValue string form like "E", "-3", "+2"
+  // score to par
   let toPar = 0;
   const stats = competitor.statistics || [];
   const stpStat = stats.find(s => s && (s.name === "scoreToPar" || s.abbreviation === "TO PAR"));
@@ -492,12 +712,24 @@ function getGolferData(competitor) {
     }
   }
 
+  // Visual state flags
+  const roundDone = stateName === "post" && !cut;
+  const onCourse  = stateName === "in" && !cut;
+  const preTee    = stateName === "pre" && !cut;
+
   return {
     strokes: strokes || null,
     toPar,
     position,
     thru,
-    cut
+    thruRaw,
+    cut,
+    stateName,
+    roundDone,
+    onCourse,
+    preTee,
+    golferId: competitor.id || competitor.athlete?.id || null,
+    roundStrokes
   };
 }
 
@@ -526,8 +758,45 @@ async function load() {
         return { name, ...getGolferData(c) };
       });
       const totalStrokes = golferData.reduce((s, g) => s + (g.strokes || 0), 0);
-      const totalToPar = golferData.reduce((s, g) => s + (g.toPar || 0), 0);
-      return { ...team, golferData, totalStrokes, totalToPar };
+
+      // Apply missed-cut penalty to each golfer's effective to-par,
+      // and aggregate into team total.
+      let totalToPar = 0;
+      let holesRemaining = 0;
+      let holesPlayed = 0;
+      let totalHoles = 0;
+      golferData.forEach(g => {
+        const penalty = missedCutPenaltyFor(g);
+        g.effectiveToPar = (g.toPar || 0) + penalty;
+        g.penalty = penalty;
+        totalToPar += g.effectiveToPar;
+
+        // Holes remaining in CURRENT round for the progress bar
+        totalHoles += 18;
+        if (g.cut) {
+          // cut: they're done, count their round as "played" (no holes left)
+          holesPlayed += 18;
+        } else if (g.roundDone) {
+          holesPlayed += 18;
+        } else if (g.onCourse) {
+          holesPlayed += g.thruRaw;
+          holesRemaining += 18 - g.thruRaw;
+        } else if (g.preTee) {
+          holesRemaining += 18;
+        } else {
+          // unknown state — treat as not yet played
+          holesRemaining += 18;
+        }
+      });
+      return {
+        ...team,
+        golferData,
+        totalStrokes,
+        totalToPar,
+        holesRemaining,
+        holesPlayed,
+        totalHoles
+      };
     });
 
     // Rank: lowest total-to-par wins live (meaningful mid-round), strokes as tiebreak
@@ -562,9 +831,13 @@ async function load() {
     });
     renderBonus(tourneyLeader, teamResults);
 
-    renderStandings(teamResults, leader, ranked);
+    const cutLineInfo = computeProjectedCut(competitors);
+    renderCutLineBanner(cutLineInfo, round);
+    const hcByGolferId = await fetchHotCold();
+    renderStandings(teamResults, leader, ranked, cutLineInfo, hcByGolferId);
     recordSnapshot(teamResults);
-    renderChart(teamResults, competitors);
+    const annotationsObj = computeAnnotations(teamResults, competitors);
+    renderChart(teamResults, competitors, annotationsObj);
   } catch (err) {
     console.error(err);
     statusBar.innerHTML = `<span class="error">⚠ Couldn't load live scores (${err.message}). Retrying in 2 min.</span>`;
@@ -602,10 +875,9 @@ function renderBonus(tourneyLeader, teamResults) {
   }
 }
 
-function renderStandings(teams, leader, ranked) {
+function renderStandings(teams, leader, ranked, cutLineInfo, hcByGolferId) {
   const container = document.getElementById("standings");
   container.innerHTML = "";
-  // render in original order but mark leader
   teams.forEach(team => {
     const rank = ranked.findIndex(r => r.name === team.name) + 1;
     const isLeader = team.name === leader.name && (team.totalStrokes > 0 || team.totalToPar < 0);
@@ -613,17 +885,54 @@ function renderStandings(teams, leader, ranked) {
     card.className = "team-card" + (isLeader ? " leader" : "");
 
     const golferRows = team.golferData.map(g => {
-      const parDisplay = g.toPar !== null ? formatToPar(g.toPar) : "";
+      const parDisplay = g.toPar !== null ? formatToPar(g.effectiveToPar ?? g.toPar) : "";
       const thruDisplay = g.thru || "";
       const shameEmoji = g.shame ? ' <span class="shame" title="Bottom 3 this round">🤣</span>' : '';
+
+      // Cut badge
+      let cutBadge = "";
+      const cb = classifyCut(g, cutLineInfo);
+      if (cb) {
+        const labels = { safe: "SAFE", bubble: "BUBBLE", danger: "DANGER", missed: "MISSED" };
+        cutBadge = ` <span class="cut-badge ${cb}" title="${cutLineInfo && cutLineInfo.projected != null ? 'Projected cut: ' + formatToPar(cutLineInfo.projected) : 'Cut line'}">${labels[cb]}</span>`;
+      }
+
+      // Hot / cold badge
+      let hcBadge = "";
+      if (hcByGolferId && g.golferId && hcByGolferId[g.golferId]) {
+        const hc = hcByGolferId[g.golferId];
+        if (hc.hot) hcBadge = ` <span class="hc-badge hot" title="Hot — ${formatToPar(hc.sum)} over last ${hc.holes} holes">🔥</span>`;
+        else if (hc.cold) hcBadge = ` <span class="hc-badge cold" title="Cold — ${formatToPar(hc.sum)} over last ${hc.holes} holes">❄️</span>`;
+      }
+
+      // Penalty annotation for cut golfers
+      let penaltyTag = "";
+      if (g.cut && g.penalty > 0) {
+        penaltyTag = ` <span class="cut-badge missed" title="+${g.penalty} missed-cut penalty applied">+${g.penalty}</span>`;
+      }
+
+      // Visual state class
+      let stateClass = "";
+      if (g.cut) stateClass = "cut";
+      else if (g.roundDone) stateClass = "round-done";
+      else if (g.onCourse) stateClass = "on-course";
+      else if (g.preTee) stateClass = "pre-tee";
+
       return `
-        <li class="golfer ${g.cut ? 'cut' : ''}">
-          <span class="golfer-name">${g.name}${shameEmoji}</span>
+        <li class="golfer ${stateClass}">
+          <span class="golfer-name">${g.name}${hcBadge}${cutBadge}${penaltyTag}${shameEmoji}</span>
           <span class="golfer-pos">${g.position}</span>
           <span class="golfer-thru">${thruDisplay}</span>
-          <span class="golfer-score to-par ${toParClass(g.toPar)}">${parDisplay}</span>
+          <span class="golfer-score to-par ${toParClass(g.effectiveToPar ?? g.toPar)}">${parDisplay}</span>
         </li>`;
     }).join("");
+
+    // Progress bar
+    const pctPlayed = team.totalHoles > 0 ? Math.round((team.holesPlayed / team.totalHoles) * 100) : 0;
+    const allDone = team.holesRemaining === 0;
+    const pgLabel = allDone
+      ? "All golfers done for the round"
+      : `${team.holesRemaining} holes left this round`;
 
     card.innerHTML = `
       <div class="team-header">
@@ -633,7 +942,15 @@ function renderStandings(teams, leader, ranked) {
       <div class="team-total">
         <div class="label">Total To Par</div>
         <div class="score big-par ${toParClass(team.totalToPar)}">${formatToPar(team.totalToPar)}</div>
-        <div class="sub-strokes">${team.totalStrokes || '—'} total strokes</div>
+      </div>
+      <div class="team-progress">
+        <div class="pg-header">
+          <span>Round Progress</span>
+          <span class="pg-remaining">${pgLabel}</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill ${allDone ? 'done' : ''}" style="width: ${pctPlayed}%"></div>
+        </div>
       </div>
       <ul class="golfers">${golferRows}</ul>
     `;
@@ -692,12 +1009,29 @@ function reconstructRoundBoundaries(competitors) {
         for (let i = 0; i < Math.min(N, ls.length); i++) {
           const raw = typeof ls[i] === "object" ? (ls[i].value ?? ls[i].displayValue) : ls[i];
           const v = parseInt(raw, 10);
-          // Only count rounds that look COMPLETED. ESPN reports partial strokes mid-round
-          // (e.g. "10" through 2 holes) via the same value field, so we require a full-round
-          // realistic stroke count to treat it as a finished round.
           if (!isNaN(v) && v >= 60 && v <= 100) { strokes += v; rounds++; hasAnyData = true; }
         }
         totalToPar += strokes - PAR * rounds;
+
+        // Apply missed-cut penalty at R3 and R4 anchors: if the golfer is cut
+        // and we're reconstructing a weekend-round boundary, and they don't
+        // have a real round score for that period, add +3 per unplayed weekend round.
+        const status = c.status || {};
+        const isCut = /(CUT|WD|DQ|MDF)/i.test(status.position?.displayName || "") ||
+                      /cut/i.test(status.displayValue || "");
+        if (isCut) {
+          // For boundary N: if N>=3 and this golfer has no real round score for period N, add penalty
+          for (let p = 3; p <= N; p++) {
+            const lsp = ls[p - 1];
+            const rawp = typeof lsp === "object" ? (lsp?.value ?? lsp?.displayValue) : lsp;
+            const vp = parseInt(rawp, 10);
+            const playedThatRound = !isNaN(vp) && vp >= 60 && vp <= 100;
+            if (!playedThatRound) {
+              totalToPar += MISSED_CUT_PENALTY_PER_WEEKEND_ROUND;
+              hasAnyData = true;
+            }
+          }
+        }
       });
       return hasAnyData ? { name: team.name, toPar: totalToPar } : null;
     });
@@ -715,7 +1049,7 @@ function reconstructRoundBoundaries(competitors) {
 }
 
 let progressChartInstance = null;
-function renderChart(teamResults, competitors) {
+function renderChart(teamResults, competitors, annotationsObj) {
   const canvas = document.getElementById("progressChart");
   if (!canvas || typeof Chart === "undefined") return;
   const wrap = canvas.parentElement;
@@ -764,6 +1098,9 @@ function renderChart(teamResults, competitors) {
 
   if (progressChartInstance) {
     progressChartInstance.data.datasets = datasets;
+    if (progressChartInstance.options?.plugins?.annotation) {
+      progressChartInstance.options.plugins.annotation.annotations = annotationsObj || {};
+    }
     progressChartInstance.update("none");
     return;
   }
@@ -775,8 +1112,11 @@ function renderChart(teamResults, competitors) {
       responsive: true,
       maintainAspectRatio: false,
       parsing: false,
-      interaction: { mode: "nearest", intersect: false },
+      interaction: { mode: "index", intersect: false },
       plugins: {
+        annotation: {
+          annotations: annotationsObj || {}
+        },
         legend: {
           labels: {
             color: "#fdf8e8",
@@ -847,6 +1187,323 @@ function renderChart(teamResults, competitors) {
     }
   });
 }
+
+// ============================================================
+//                NEW FEATURES: helpers & handlers
+// ============================================================
+
+// ---- Missed cut penalty helper ----
+function missedCutPenaltyFor(g) {
+  if (!g || !g.cut) return 0;
+  // Count weekend rounds (R3 + R4) that the golfer didn't actually play
+  let missed = 0;
+  if (!g.roundStrokes[2]) missed++;
+  if (!g.roundStrokes[3]) missed++;
+  return missed * MISSED_CUT_PENALTY_PER_WEEKEND_ROUND;
+}
+
+// ---- Projected cut line ----
+// Masters 2026 rule: low 50 scores and ties after R2 make the cut.
+function computeProjectedCut(competitors) {
+  // Build list of current tournament to-par values for competitors who have
+  // actually started playing (toPar set + not WD/DQ).
+  const scored = [];
+  for (const c of competitors) {
+    const status = c.status || {};
+    const pos = status.position?.displayName || "";
+    if (/WD|DQ/i.test(pos)) continue;
+    const stateName = status.type?.state || "";
+    // Only include players who've recorded at least one stroke in R1
+    const ls = c.linescores || [];
+    const hasAnyRound = ls.some(l => {
+      const raw = typeof l === "object" ? (l?.value ?? l?.displayValue) : l;
+      const v = parseInt(raw, 10);
+      return !isNaN(v) && v >= 60 && v <= 100;
+    });
+    // Or currently in progress
+    const inProgress = stateName === "in" || stateName === "post";
+    if (!hasAnyRound && !inProgress) continue;
+
+    const stats = c.statistics || [];
+    const stpStat = stats.find(s => s && (s.name === "scoreToPar" || s.abbreviation === "TO PAR"));
+    let toPar = 0;
+    if (stpStat && typeof stpStat.value === "number") {
+      toPar = stpStat.value;
+    } else if (c.score && typeof c.score === "object" && typeof c.score.value === "number") {
+      toPar = c.score.value;
+    } else {
+      continue;
+    }
+    scored.push(toPar);
+  }
+  if (scored.length < 50) return { projected: null, tournamentState: null };
+  scored.sort((a, b) => a - b);
+  // 50th best score (0-indexed: index 49)
+  const projected = scored[49];
+  return { projected };
+}
+
+// Classify one drafted golfer against the projected cut line.
+function classifyCut(g, cutLineInfo) {
+  if (!cutLineInfo || cutLineInfo.projected == null) return null;
+  // Only show cut badges during R1/R2 (before cut is set). After cut is set,
+  // the existing `g.cut` flag takes over via the `cut` CSS class.
+  if (g.cut) return "missed";
+  const diff = (g.toPar || 0) - cutLineInfo.projected;
+  if (diff <= -2) return "safe";
+  if (diff <= 1)  return "bubble";
+  return "danger";
+}
+
+// ---- Weather strip ----
+async function fetchWeather() {
+  // Open-Meteo: free, no API key required.
+  const url = `https://api.open-meteo.com/v1/forecast` +
+    `?latitude=${AUGUSTA_LAT}&longitude=${AUGUSTA_LON}` +
+    `&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,precipitation` +
+    `&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America/New_York`;
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const j = await r.json();
+    return j.current || null;
+  } catch (e) {
+    console.warn("weather fetch failed", e);
+    return null;
+  }
+}
+
+function weatherCodeToIcon(code) {
+  // Open-Meteo WMO weather codes
+  if (code === 0) return "☀️";
+  if (code === 1 || code === 2) return "🌤️";
+  if (code === 3) return "☁️";
+  if (code === 45 || code === 48) return "🌫️";
+  if (code >= 51 && code <= 57) return "🌦️";
+  if (code >= 61 && code <= 67) return "🌧️";
+  if (code >= 71 && code <= 77) return "🌨️";
+  if (code >= 80 && code <= 82) return "🌦️";
+  if (code >= 95) return "⛈️";
+  return "🌡️";
+}
+
+function windDir(deg) {
+  if (typeof deg !== "number") return "";
+  const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+  return dirs[Math.round(deg / 22.5) % 16];
+}
+
+function renderWeather(w) {
+  const el = document.getElementById("weatherStrip");
+  if (!el) return;
+  if (!w) {
+    el.innerHTML = `
+      <span class="wx-title">Augusta</span>
+      <span class="wx-loading">weather unavailable</span>`;
+    return;
+  }
+  const icon = weatherCodeToIcon(w.weather_code);
+  const temp = Math.round(w.temperature_2m);
+  const wind = Math.round(w.wind_speed_10m);
+  const dir = windDir(w.wind_direction_10m);
+  const precip = typeof w.precipitation === "number" && w.precipitation > 0
+    ? `<span class="wx-item">🌧️ <span class="wx-value">${w.precipitation.toFixed(2)}"</span></span>`
+    : "";
+  el.innerHTML = `
+    <span class="wx-title">⛳ Augusta</span>
+    <span class="wx-item">${icon} <span class="wx-value">${temp}°F</span></span>
+    <span class="wx-item">💨 <span class="wx-value">${wind} mph ${dir}</span></span>
+    ${precip}
+  `;
+}
+
+// ---- Chart annotations ----
+// Compute chart annotation markers from:
+//   1. localStorage snapshot history (lead changes)
+//   2. drafted golfer linescores (great round / rough round)
+// These render as vertical dashed lines with emoji labels via chartjs-plugin-annotation.
+function computeAnnotations(teamResults, competitors) {
+  const out = {};
+  let idx = 0;
+
+  // --- Lead changes from snapshot history ---
+  const snaps = loadSnapshots();
+  let prevLeader = null;
+  for (const s of snaps) {
+    if (!s.teams || s.teams.length < 2) continue;
+    const sorted = [...s.teams].sort((a, b) => a.toPar - b.toPar);
+    const leader = sorted[0].toPar < sorted[1].toPar ? sorted[0].name : null;
+    if (leader && prevLeader && leader !== prevLeader) {
+      out[`ann_${idx++}`] = {
+        type: "line",
+        xMin: s.t, xMax: s.t,
+        borderColor: TEAM_COLORS[leader] || "rgba(249,224,118,0.6)",
+        borderWidth: 1.5,
+        borderDash: [4, 4],
+        label: {
+          display: true,
+          content: `🏆 ${leader}`,
+          position: "start",
+          backgroundColor: "rgba(0,36,24,0.92)",
+          color: TEAM_COLORS[leader] || "#f9e076",
+          font: { size: 10, weight: "bold" },
+          padding: 4,
+          borderRadius: 4
+        }
+      };
+    }
+    if (leader) prevLeader = leader;
+  }
+
+  // --- Notable rounds from drafted golfers ---
+  // For each drafted golfer, look at their completed rounds (60-100 strokes).
+  // Mark great rounds (<=68) and rough rounds (>=78). Anchor the annotation
+  // at the scheduled round end time.
+  for (const team of teamResults) {
+    for (const g of team.golferData) {
+      if (!g.roundStrokes) continue;
+      for (let r = 0; r < 4; r++) {
+        const s = g.roundStrokes[r];
+        if (!s) continue;
+        const xMs = new Date(ROUND_END_TIMES_UTC[r]).getTime();
+        const toPar = s - PAR;
+        if (s <= 68) {
+          out[`ann_${idx++}`] = {
+            type: "line",
+            xMin: xMs, xMax: xMs,
+            borderColor: "rgba(251,146,60,0.55)",
+            borderWidth: 1,
+            borderDash: [3, 3],
+            label: {
+              display: true,
+              content: `🔥 ${g.name.split(" ").pop()} ${formatToPar(toPar)}`,
+              position: "end",
+              backgroundColor: "rgba(0,36,24,0.92)",
+              color: "#fb923c",
+              font: { size: 9, weight: "bold" },
+              padding: 3,
+              borderRadius: 4,
+              yAdjust: -10
+            }
+          };
+        } else if (s >= 78) {
+          out[`ann_${idx++}`] = {
+            type: "line",
+            xMin: xMs, xMax: xMs,
+            borderColor: "rgba(96,165,250,0.55)",
+            borderWidth: 1,
+            borderDash: [3, 3],
+            label: {
+              display: true,
+              content: `❄️ ${g.name.split(" ").pop()} ${formatToPar(toPar)}`,
+              position: "end",
+              backgroundColor: "rgba(0,36,24,0.92)",
+              color: "#60a5fa",
+              font: { size: 9, weight: "bold" },
+              padding: 3,
+              borderRadius: 4,
+              yAdjust: 10
+            }
+          };
+        }
+      }
+    }
+  }
+  return out;
+}
+
+// ---- Hot/cold from worker proxy ----
+// Worker endpoint /hotcold returns `{[golferId]: {hot, cold, sum, holes}}`.
+// If the worker hasn't been upgraded yet (or request fails), returns empty.
+let _hotColdCache = null;
+let _hotColdCacheAt = 0;
+async function fetchHotCold() {
+  // Throttle to once every 90 seconds
+  if (_hotColdCache && (Date.now() - _hotColdCacheAt) < 90000) {
+    return _hotColdCache;
+  }
+  try {
+    const r = await fetch(`${WORKER_URL}/hotcold`);
+    if (!r.ok) return {};
+    const j = await r.json();
+    _hotColdCache = j.hotcold || {};
+    _hotColdCacheAt = Date.now();
+    return _hotColdCache;
+  } catch (e) {
+    return {};
+  }
+}
+
+// ---- Cut line banner render ----
+function renderCutLineBanner(cutLineInfo, tournamentRound) {
+  const box = document.getElementById("cutLineBox");
+  if (!box) return;
+  if (!cutLineInfo || cutLineInfo.projected == null) {
+    box.innerHTML = "";
+    return;
+  }
+  // Only show during R1/R2 (cut isn't relevant after it's set)
+  if (tournamentRound > 2) {
+    box.innerHTML = "";
+    return;
+  }
+  box.innerHTML = `
+    <div class="cut-line-indicator">
+      ✂️ Projected cut line: <strong>${formatToPar(cutLineInfo.projected)}</strong>
+      · Badges show each golfer's cut status (Safe / Bubble / Danger)
+    </div>`;
+}
+
+// ---- Share card download ----
+function setupShareButton() {
+  const btn = document.getElementById("shareBtn");
+  if (!btn || btn._wired) return;
+  btn._wired = true;
+  btn.addEventListener("click", async () => {
+    if (typeof html2canvas === "undefined") {
+      alert("Share image library didn't load. Try refreshing the page.");
+      return;
+    }
+    const area = document.getElementById("shareableArea");
+    if (!area) return;
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = "Generating image…";
+    try {
+      const canvas = await html2canvas(area, {
+        backgroundColor: "#002418",
+        scale: 2,
+        useCORS: true,
+        logging: false
+      });
+      const blob = await new Promise(res => canvas.toBlob(res, "image/png"));
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 16);
+      a.href = url;
+      a.download = `masters-pool-${stamp}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) {
+      console.error("share card generation failed", e);
+      alert("Couldn't generate the image. Try again?");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  });
+}
+
+// Kick off weather + share setup once at start
+(async () => {
+  setupShareButton();
+  const w = await fetchWeather();
+  renderWeather(w);
+  // Refresh weather every 15 minutes
+  setInterval(async () => renderWeather(await fetchWeather()), 15 * 60 * 1000);
+})();
 
 load();
 setInterval(load, 2 * 60 * 1000); // refresh every 2 minutes
