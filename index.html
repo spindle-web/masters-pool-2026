@@ -1586,9 +1586,21 @@ function renderTournamentLeaderboard(competitors) {
 
   const rows = top.map(({ c, status, posStr }) => {
     const name = c.athlete?.displayName || "—";
-    const toPar = status.type?.state === "pre" ? null :
-                  (typeof c.score === "number" ? c.score :
-                   (status.statistics || []).find(s => s.name === "scoreToPar")?.value);
+    let toPar = null;
+    if (status.type?.state !== "pre") {
+      const stats = c.statistics || [];
+      const stpStat = stats.find(s => s && (s.name === "scoreToPar" || s.abbreviation === "TO PAR"));
+      if (stpStat && typeof stpStat.value === "number") {
+        toPar = stpStat.value;
+      } else if (typeof c.score === "number") {
+        toPar = c.score;
+      } else if (typeof c.score === "string") {
+        toPar = parseToPar(c.score);
+      } else if (c.score && typeof c.score === "object") {
+        if (typeof c.score.value === "number") toPar = c.score.value;
+        else if (typeof c.score.displayValue === "string") toPar = parseToPar(c.score.displayValue);
+      }
+    }
     const scoreDisp = toPar == null ? "—" : formatToPar(toPar);
     const scoreCls = toPar == null ? "" : toParClass(toPar);
 
