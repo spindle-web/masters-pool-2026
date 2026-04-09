@@ -320,14 +320,23 @@
   }
   .team-progress .pg-header {
     display: flex;
+    align-items: baseline;
     justify-content: space-between;
+    gap: 10px;
     font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 1.5px;
-    opacity: 0.75;
-    margin-bottom: 6px;
+    letter-spacing: 1.2px;
+    opacity: 0.8;
+    margin-bottom: 8px;
+    white-space: nowrap;
   }
-  .team-progress .pg-remaining { color: var(--masters-yellow); font-weight: 700; }
+  .team-progress .pg-label { opacity: 0.7; }
+  .team-progress .pg-remaining {
+    color: var(--masters-yellow);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.8px;
+  }
   .progress-track {
     height: 8px;
     background: rgba(255,255,255,0.08);
@@ -345,29 +354,25 @@
     background: linear-gradient(90deg, #4ade80, #22c55e);
   }
 
-  /* ============ FINISHED GOLFER VISUAL ============ */
-  .golfer.round-done {
-    background: rgba(255,255,255,0.02);
-  }
-  .golfer.round-done .golfer-name {
-    opacity: 0.55;
+  /* ============ ON-COURSE INDICATOR ============ */
+  .golfer.on-course {
+    border-left: 2px solid #4ade80;
+    padding-left: 6px;
   }
   .golfer.round-done .golfer-thru {
     color: #4ade80;
     font-weight: 700;
-    opacity: 1;
-  }
-  .golfer.pre-tee .golfer-name {
-    opacity: 0.75;
   }
   .golfer.pre-tee .golfer-thru {
     color: var(--masters-yellow);
-    opacity: 0.85;
   }
-  .golfer.on-course {
-    background: rgba(74, 222, 128, 0.04);
-    border-left: 2px solid #4ade80;
-    padding-left: 6px;
+
+  /* Cut-danger / missed name highlight */
+  .golfer-name.cut-danger { color: #fb923c; }
+  .golfer-name.cut-missed {
+    color: #f87171;
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
   }
 
   /* ============ CUT LINE BADGES ============ */
@@ -526,13 +531,8 @@
 
     <div class="chart-card">
       <h2>Team Progress</h2>
-      <div class="chart-subtitle">Total to par over time · live snapshots every 2 min + end-of-round anchors · tap annotation pins for details</div>
+      <div class="chart-subtitle">Total to par over time · live snapshots every 2 min + end-of-round anchors</div>
       <div class="chart-wrap"><canvas id="progressChart"></canvas></div>
-      <div class="hc-legend">
-        🔥 <strong>Hot</strong> = −2 or better over last 4 holes ·
-        ❄️ <strong>Cold</strong> = +2 or worse over last 4 holes ·
-        ✓ <strong>F</strong> = finished round · badges: <strong>Safe</strong>/<strong>Bubble</strong>/<strong>Danger</strong>/<strong>Missed</strong> show cut-line status
-      </div>
     </div>
   </div>
 
@@ -836,8 +836,7 @@ async function load() {
     const hcByGolferId = await fetchHotCold();
     renderStandings(teamResults, leader, ranked, cutLineInfo, hcByGolferId);
     recordSnapshot(teamResults);
-    const annotationsObj = computeAnnotations(teamResults, competitors);
-    renderChart(teamResults, competitors, annotationsObj);
+    renderChart(teamResults, competitors, {});
   } catch (err) {
     console.error(err);
     statusBar.innerHTML = `<span class="error">⚠ Couldn't load live scores (${err.message}). Retrying in 2 min.</span>`;
@@ -889,15 +888,13 @@ function renderStandings(teams, leader, ranked, cutLineInfo, hcByGolferId) {
       const thruDisplay = g.thru || "";
       const shameEmoji = g.shame ? ' <span class="shame" title="Bottom 3 this round">🤣</span>' : '';
 
-      // Cut badge
-      let cutBadge = "";
+      // Cut-line name highlight (orange for danger, strikethrough for missed)
       const cb = classifyCut(g, cutLineInfo);
-      if (cb) {
-        const labels = { safe: "SAFE", bubble: "BUBBLE", danger: "DANGER", missed: "MISSED" };
-        cutBadge = ` <span class="cut-badge ${cb}" title="${cutLineInfo && cutLineInfo.projected != null ? 'Projected cut: ' + formatToPar(cutLineInfo.projected) : 'Cut line'}">${labels[cb]}</span>`;
-      }
+      let nameClass = "";
+      if (cb === "danger") nameClass = " cut-danger";
+      else if (cb === "missed" || g.cut) nameClass = " cut-missed";
 
-      // Hot / cold badge
+      // Hot / cold badge — right next to the name
       let hcBadge = "";
       if (hcByGolferId && g.golferId && hcByGolferId[g.golferId]) {
         const hc = hcByGolferId[g.golferId];
@@ -905,13 +902,7 @@ function renderStandings(teams, leader, ranked, cutLineInfo, hcByGolferId) {
         else if (hc.cold) hcBadge = ` <span class="hc-badge cold" title="Cold — ${formatToPar(hc.sum)} over last ${hc.holes} holes">❄️</span>`;
       }
 
-      // Penalty annotation for cut golfers
-      let penaltyTag = "";
-      if (g.cut && g.penalty > 0) {
-        penaltyTag = ` <span class="cut-badge missed" title="+${g.penalty} missed-cut penalty applied">+${g.penalty}</span>`;
-      }
-
-      // Visual state class
+      // Visual state class on the row
       let stateClass = "";
       if (g.cut) stateClass = "cut";
       else if (g.roundDone) stateClass = "round-done";
@@ -920,7 +911,7 @@ function renderStandings(teams, leader, ranked, cutLineInfo, hcByGolferId) {
 
       return `
         <li class="golfer ${stateClass}">
-          <span class="golfer-name">${g.name}${hcBadge}${cutBadge}${penaltyTag}${shameEmoji}</span>
+          <span class="golfer-name${nameClass}">${g.name}${hcBadge}${shameEmoji}</span>
           <span class="golfer-pos">${g.position}</span>
           <span class="golfer-thru">${thruDisplay}</span>
           <span class="golfer-score to-par ${toParClass(g.effectiveToPar ?? g.toPar)}">${parDisplay}</span>
@@ -931,8 +922,8 @@ function renderStandings(teams, leader, ranked, cutLineInfo, hcByGolferId) {
     const pctPlayed = team.totalHoles > 0 ? Math.round((team.holesPlayed / team.totalHoles) * 100) : 0;
     const allDone = team.holesRemaining === 0;
     const pgLabel = allDone
-      ? "All golfers done for the round"
-      : `${team.holesRemaining} holes left this round`;
+      ? "Round complete"
+      : `${team.holesRemaining} holes left`;
 
     card.innerHTML = `
       <div class="team-header">
@@ -945,7 +936,7 @@ function renderStandings(teams, leader, ranked, cutLineInfo, hcByGolferId) {
       </div>
       <div class="team-progress">
         <div class="pg-header">
-          <span>Round Progress</span>
+          <span class="pg-label">Round Progress</span>
           <span class="pg-remaining">${pgLabel}</span>
         </div>
         <div class="progress-track">
@@ -1450,7 +1441,7 @@ function renderCutLineBanner(cutLineInfo, tournamentRound) {
   box.innerHTML = `
     <div class="cut-line-indicator">
       ✂️ Projected cut line: <strong>${formatToPar(cutLineInfo.projected)}</strong>
-      · Badges show each golfer's cut status (Safe / Bubble / Danger)
+      · At-risk golfers highlighted in orange
     </div>`;
 }
 
