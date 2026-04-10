@@ -1355,7 +1355,7 @@ function renderChart(teamResults, competitors, annotationsObj) {
   // but the chart is fully created by that point. Catch the late error and
   // retrieve the instance via Chart.getChart().
   try {
-  progressChartInstance = new Chart(canvas, {
+  const _inst = new Chart(canvas, {
     type: "line",
     data: { datasets },
     options: {
@@ -1435,13 +1435,13 @@ function renderChart(teamResults, competitors, annotationsObj) {
       }
     }
   });
+  progressChartInstance = _inst;
   } catch (chartErr) {
     // Chart.js 4.4.1 may throw during late event-binding phase, but the chart
     // is already created on the canvas by that point. Recover the instance.
-    progressChartInstance = Chart.getChart(canvas) || null;
-    if (!progressChartInstance) {
-      console.error("Chart creation truly failed:", chartErr.message);
-    }
+    const recovered = Chart.getChart(canvas);
+    console.warn("Chart threw:", chartErr.message, "| recovered:", !!recovered);
+    progressChartInstance = recovered || null;
   }
 }
 
