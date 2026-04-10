@@ -195,8 +195,8 @@
   .golfers { list-style: none; }
   .golfer {
     display: grid;
-    grid-template-columns: 1fr auto auto auto;
-    gap: 10px;
+    grid-template-columns: 1fr auto auto auto auto;
+    gap: 8px;
     align-items: center;
     padding: 10px 8px;
     border-bottom: 1px solid rgba(255,255,255,0.06);
@@ -204,14 +204,21 @@
   }
   .golfer:last-child { border-bottom: none; }
   .golfer-name { font-weight: 600; }
-  .golfer-pos { opacity: 0.7; font-size: 12px; min-width: 30px; text-align: right; }
+  .golfer-pos { opacity: 0.7; font-size: 12px; min-width: 28px; text-align: right; }
   .golfer-thru {
     opacity: 0.75;
     font-size: 11px;
-    min-width: 54px;
+    min-width: 50px;
     text-align: right;
     letter-spacing: 0.5px;
     text-transform: uppercase;
+  }
+  .golfer-today {
+    font-weight: 600;
+    font-size: 13px;
+    min-width: 34px;
+    text-align: right;
+    opacity: 0.85;
   }
   .golfer-score {
     font-weight: 700;
@@ -824,9 +831,27 @@ function getGolferData(competitor) {
   const onCourse  = stateName === "in" && !cut;
   const preTee    = stateName === "pre" && !cut;
 
+  // "Today" score: current-round to-par.
+  // Derived as tournament-toPar minus sum of all PRIOR completed rounds' to-par.
+  // This is more reliable than linescores[currentRound-1] mid-round, because
+  // the live toPar (from statistics) updates hole-by-hole while linescores
+  // only reflects strokes-so-far (which isn't a finished-round total).
+  let todayToPar = null;
+  const currentRoundIdx = (status.period || 1) - 1;
+  if (stateName === "in" || stateName === "post") {
+    let priorToPar = 0;
+    for (let i = 0; i < currentRoundIdx; i++) {
+      if (roundStrokes[i] != null) {
+        priorToPar += roundStrokes[i] - PAR;
+      }
+    }
+    todayToPar = toPar - priorToPar;
+  }
+
   return {
     strokes: strokes || null,
     toPar,
+    todayToPar,
     position,
     thru,
     thruRaw,
@@ -1017,11 +1042,16 @@ function renderStandings(teams, leader, ranked, cutLineInfo, hcByGolferId) {
       else if (g.onCourse) stateClass = "on-course";
       else if (g.preTee) stateClass = "pre-tee";
 
+      // "Today" column — current round to-par
+      const todayDisp = g.todayToPar != null ? formatToPar(g.todayToPar) : "";
+      const todayCls = g.todayToPar != null ? toParClass(g.todayToPar) : "";
+
       return `
         <li class="golfer ${stateClass}">
           <span class="golfer-name${nameClass}">${g.name}${hcBadge}${shameEmoji}</span>
           <span class="golfer-pos">${g.position}</span>
           <span class="golfer-thru">${thruDisplay}</span>
+          <span class="golfer-today to-par ${todayCls}">${todayDisp}</span>
           <span class="golfer-score to-par ${toParClass(g.effectiveToPar ?? g.toPar)}">${parDisplay}</span>
         </li>`;
     }).join("");
@@ -1158,6 +1188,79 @@ function reconstructRoundBoundaries(competitors) {
 }
 
 let progressChartInstance = null;
+
+// Compress the x-axis: keep real-time spacing within each round, but collapse
+// the overnight gap between rounds to a tiny fixed-width separator.
+// Returns { mapped: [{x, y, origT}...], dividers: [{x, round}...], xToLabel }
+function compressTimeline(allPoints) {
+  if (allPoints.length === 0) return { mapped: [], dividers: [], xToLabel: () => "" };
+
+  // Determine round boundaries from ROUND_END_TIMES_UTC
+  const boundaryMs = ROUND_END_TIMES_UTC.map(s => new Date(s).getTime());
+
+  // Assign each point to a round: latest boundary it comes AFTER, or R1 if before first
+  function roundOf(t) {
+    for (let i = boundaryMs.length - 1; i >= 0; i--) {
+      if (t > boundaryMs[i]) return i + 2; // finished round i+1, so in round i+2
+    }
+    return 1;
+  }
+
+  // Group points by round
+  const byRound = {};
+  for (const p of allPoints) {
+    const r = roundOf(p.t);
+    (byRound[r] = byRound[r] || []).push(p);
+  }
+  const rounds = Object.keys(byRound).map(Number).sort((a, b) => a - b);
+
+  // Build compressed x values
+  const GAP_MS = 10 * 60 * 1000; // 10 "minutes" of visual gap between rounds
+  let cursor = 0;
+  const result = [];
+  const dividers = [];
+  const lookupTable = []; // for tooltip: compressed x -> real timestamp
+
+  for (let ri = 0; ri < rounds.length; ri++) {
+    const r = rounds[ri];
+    const pts = byRound[r].sort((a, b) => a.t - b.t);
+    const roundStart = pts[0].t;
+
+    if (ri > 0) {
+      // Insert divider at the gap midpoint
+      dividers.push({ x: cursor + GAP_MS / 2, round: rounds[ri - 1] });
+      cursor += GAP_MS;
+    }
+
+    for (const p of pts) {
+      const cx = cursor + (p.t - roundStart);
+      for (const team of p.teams || []) {
+        result.push({ x: cx, y: team.toPar, team: team.name, origT: p.t });
+      }
+      lookupTable.push({ cx, origT: p.t });
+    }
+
+    const roundDuration = pts[pts.length - 1].t - roundStart;
+    cursor += roundDuration;
+  }
+
+  // For tick labels: convert compressed x back to a real time
+  function xToLabel(cx) {
+    // Find closest entry
+    let best = lookupTable[0];
+    let bestDist = Infinity;
+    for (const entry of lookupTable) {
+      const d = Math.abs(entry.cx - cx);
+      if (d < bestDist) { bestDist = d; best = entry; }
+    }
+    if (!best) return "";
+    const d = new Date(best.origT);
+    return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  }
+
+  return { result, dividers, xToLabel, lookupTable };
+}
+
 function renderChart(teamResults, competitors, annotationsObj) {
   const canvas = document.getElementById("progressChart");
   if (!canvas || typeof Chart === "undefined") return;
@@ -1188,14 +1291,14 @@ function renderChart(teamResults, competitors, annotationsObj) {
   if (note) note.remove();
   canvas.style.display = "";
 
+  // Compress the timeline to remove overnight gaps
+  const { result: flatPts, dividers, xToLabel, lookupTable } = compressTimeline(allPoints);
+
   const datasets = TEAMS.map(team => ({
     label: team.name,
-    data: allPoints
-      .map(p => {
-        const found = p.teams.find(x => x.name === team.name);
-        return found ? { x: p.t, y: found.toPar } : null;
-      })
-      .filter(d => d !== null),
+    data: flatPts
+      .filter(p => p.team === team.name)
+      .map(p => ({ x: p.x, y: p.y })),
     borderColor: TEAM_COLORS[team.name],
     backgroundColor: TEAM_COLORS[team.name] + "33",
     borderWidth: 2.5,
@@ -1205,10 +1308,33 @@ function renderChart(teamResults, competitors, annotationsObj) {
     fill: false
   }));
 
+  // Build round divider annotations
+  const dividerAnnotations = {};
+  dividers.forEach((d, i) => {
+    dividerAnnotations[`roundDiv${i}`] = {
+      type: "line",
+      xMin: d.x,
+      xMax: d.x,
+      borderColor: "rgba(249, 224, 118, 0.35)",
+      borderWidth: 1.5,
+      borderDash: [6, 4],
+      label: {
+        display: true,
+        content: `R${d.round} | R${d.round + 1}`,
+        position: "start",
+        color: "rgba(249, 224, 118, 0.7)",
+        backgroundColor: "rgba(0,36,24,0.8)",
+        font: { size: 10, weight: "700", family: "Inter" },
+        padding: { top: 3, bottom: 3, left: 6, right: 6 },
+        borderRadius: 4
+      }
+    };
+  });
+
   if (progressChartInstance) {
     progressChartInstance.data.datasets = datasets;
     if (progressChartInstance.options?.plugins?.annotation) {
-      progressChartInstance.options.plugins.annotation.annotations = annotationsObj || {};
+      progressChartInstance.options.plugins.annotation.annotations = dividerAnnotations;
     }
     progressChartInstance.update("none");
     return;
@@ -1224,7 +1350,7 @@ function renderChart(teamResults, competitors, annotationsObj) {
       interaction: { mode: "index", intersect: false },
       plugins: {
         annotation: {
-          annotations: annotationsObj || {}
+          annotations: dividerAnnotations
         },
         legend: {
           labels: {
@@ -1242,14 +1368,22 @@ function renderChart(teamResults, competitors, annotationsObj) {
           bodyColor: "#fdf8e8",
           padding: 10,
           callbacks: {
-            title: items =>
-              new Date(items[0].parsed.x).toLocaleString([], {
-                weekday: "short",
-                month: "short",
-                day: "numeric",
-                hour: "numeric",
-                minute: "2-digit"
-              }),
+            title: items => {
+              // Find the original timestamp from the compressed x
+              const cx = items[0].parsed.x;
+              let best = lookupTable[0];
+              let bestDist = Infinity;
+              for (const entry of lookupTable) {
+                const d = Math.abs(entry.cx - cx);
+                if (d < bestDist) { bestDist = d; best = entry; }
+              }
+              return best
+                ? new Date(best.origT).toLocaleString([], {
+                    weekday: "short", month: "short", day: "numeric",
+                    hour: "numeric", minute: "2-digit"
+                  })
+                : "";
+            },
             label: item => {
               const v = item.parsed.y;
               const disp = v === 0 ? "E" : v > 0 ? "+" + v : "" + v;
@@ -1265,17 +1399,8 @@ function renderChart(teamResults, competitors, annotationsObj) {
             color: "rgba(253,248,232,0.7)",
             font: { size: 11 },
             maxRotation: 0,
-            autoSkipPadding: 20,
-            callback: v => {
-              const d = new Date(v);
-              const now = new Date();
-              const sameDay = d.toDateString() === now.toDateString();
-              return sameDay
-                ? d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
-                : d.toLocaleDateString([], { weekday: "short" }) +
-                    " " +
-                    d.toLocaleTimeString([], { hour: "numeric" });
-            }
+            autoSkipPadding: 30,
+            callback: v => xToLabel(v)
           },
           grid: { color: "rgba(255,255,255,0.05)" }
         },
