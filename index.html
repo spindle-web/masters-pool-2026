@@ -1072,13 +1072,23 @@ function recordSnapshot(teamResults) {
     t,
     teams: teamResults.map(tr => ({ name: tr.name, toPar: tr.totalToPar }))
   };
-  // Skip if last snapshot is identical and very recent (<60s)
-  const last = snaps[snaps.length - 1];
-  if (last && (t - last.t) < 60000 && JSON.stringify(last.teams) === JSON.stringify(entry.teams)) return;
   // Skip pre-tournament zeros so the chart doesn't start with a flat-at-E line
   const anyNonZero = entry.teams.some(t => t.toPar !== 0);
   const anyRealData = teamResults.some(tr => tr.totalStrokes > 0);
   if (!anyNonZero && !anyRealData) return;
+  // Skip if no tracked golfer is currently playing (between rounds or after
+  // everyone has finished). We still want to capture the final in-round
+  // state, so only skip once the last snapshot already reflects this same
+  // idle state — that way the moment the round completes gets recorded,
+  // and subsequent idle ticks are suppressed until play resumes.
+  const anyLive = teamResults.some(tr =>
+    tr.golferData?.some(g => g.stateName === "in")
+  );
+  const last = snaps[snaps.length - 1];
+  const sameAsLast = last && JSON.stringify(last.teams) === JSON.stringify(entry.teams);
+  if (!anyLive && sameAsLast) return;
+  // Skip if last snapshot is identical and very recent (<60s)
+  if (last && (t - last.t) < 60000 && sameAsLast) return;
   snaps.push(entry);
   while (snaps.length > MAX_SNAPSHOTS) snaps.shift();
   saveSnapshots(snaps);
