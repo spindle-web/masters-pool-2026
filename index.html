@@ -192,6 +192,21 @@
   .to-par.over { color: #f87171; }
   .to-par.even { color: var(--cream); }
 
+  .golfer-header {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto auto;
+    gap: 8px;
+    padding: 4px 8px 6px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.45;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .gh-pos { min-width: 28px; text-align: right; }
+  .gh-thru { min-width: 50px; text-align: right; }
+  .gh-today { min-width: 34px; text-align: right; }
+  .gh-total { min-width: 42px; text-align: right; }
   .golfers { list-style: none; }
   .golfer {
     display: grid;
@@ -1088,6 +1103,13 @@ function renderStandings(teams, leader, ranked, cutLineInfo, hcByGolferId) {
           <div class="progress-fill ${allDone ? 'done' : ''}" style="width: ${pctPlayed}%"></div>
         </div>
       </div>
+      <div class="golfer-header">
+        <span class="gh-name">Golfer</span>
+        <span class="gh-pos">Pos</span>
+        <span class="gh-thru">Thru</span>
+        <span class="gh-today">Today</span>
+        <span class="gh-total">Total</span>
+      </div>
       <ul class="golfers">${golferRows}</ul>
     `;
     container.appendChild(card);
@@ -1198,62 +1220,79 @@ let progressChartInstance = null;
 
 // Compress the x-axis: keep real-time spacing within each round, but collapse
 // the overnight gap between rounds to a tiny fixed-width separator.
-// Returns { mapped: [{x, y, origT}...], dividers: [{x, round}...], xToLabel }
+// Uses gap detection (>2 hours between snapshots) to find round breaks,
+// which naturally handles overnight idle periods.
 function compressTimeline(allPoints) {
-  if (allPoints.length === 0) return { mapped: [], dividers: [], xToLabel: () => "" };
+  if (allPoints.length === 0) return { result: [], dividers: [], xToLabel: () => "", lookupTable: [] };
 
-  // Determine round boundaries from ROUND_END_TIMES_UTC
+  const sorted = [...allPoints].sort((a, b) => a.t - b.t);
+
+  // 1. First, deduplicate consecutive snapshots with identical team scores.
+  //    Overnight idle snaps all look the same — keep only the first.
+  const deduped = [sorted[0]];
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = deduped[deduped.length - 1];
+    const cur = sorted[i];
+    const same = JSON.stringify(prev.teams) === JSON.stringify(cur.teams);
+    // Keep if scores changed, or if it's a boundary marker, or if < 10 min gap
+    if (!same || cur.boundary || (cur.t - prev.t) < 10 * 60 * 1000) {
+      deduped.push(cur);
+    }
+  }
+
+  // 2. Detect large gaps (>2 hours) to split into segments (rounds).
+  const GAP_THRESHOLD = 2 * 60 * 60 * 1000; // 2 hours
+  const segments = []; // arrays of points
+  let seg = [deduped[0]];
+  for (let i = 1; i < deduped.length; i++) {
+    if (deduped[i].t - deduped[i - 1].t > GAP_THRESHOLD) {
+      segments.push(seg);
+      seg = [];
+    }
+    seg.push(deduped[i]);
+  }
+  segments.push(seg);
+
+  // 3. Map each segment to a round number (match against ROUND_END_TIMES_UTC).
   const boundaryMs = ROUND_END_TIMES_UTC.map(s => new Date(s).getTime());
-
-  // Assign each point to a round: latest boundary it comes AFTER, or R1 if before first
   function roundOf(t) {
     for (let i = boundaryMs.length - 1; i >= 0; i--) {
-      if (t > boundaryMs[i]) return i + 2; // finished round i+1, so in round i+2
+      if (t > boundaryMs[i]) return i + 2;
     }
     return 1;
   }
 
-  // Group points by round
-  const byRound = {};
-  for (const p of allPoints) {
-    const r = roundOf(p.t);
-    (byRound[r] = byRound[r] || []).push(p);
-  }
-  const rounds = Object.keys(byRound).map(Number).sort((a, b) => a - b);
-
-  // Build compressed x values
-  const GAP_MS = 10 * 60 * 1000; // 10 "minutes" of visual gap between rounds
+  // 4. Build compressed x values with small fixed gaps between segments.
+  const GAP_MS = 10 * 60 * 1000; // visual gap between segments
   let cursor = 0;
   const result = [];
   const dividers = [];
-  const lookupTable = []; // for tooltip: compressed x -> real timestamp
+  const lookupTable = [];
 
-  for (let ri = 0; ri < rounds.length; ri++) {
-    const r = rounds[ri];
-    const pts = byRound[r].sort((a, b) => a.t - b.t);
-    const roundStart = pts[0].t;
+  for (let si = 0; si < segments.length; si++) {
+    const pts = segments[si];
+    const segStart = pts[0].t;
 
-    if (ri > 0) {
-      // Insert divider at the gap midpoint
-      dividers.push({ x: cursor + GAP_MS / 2, round: rounds[ri - 1] });
+    if (si > 0) {
+      // Determine which round just ended (from the previous segment's last point)
+      const prevRound = roundOf(segments[si - 1][segments[si - 1].length - 1].t);
+      dividers.push({ x: cursor + GAP_MS / 2, round: prevRound });
       cursor += GAP_MS;
     }
 
     for (const p of pts) {
-      const cx = cursor + (p.t - roundStart);
+      const cx = cursor + (p.t - segStart);
       for (const team of p.teams || []) {
         result.push({ x: cx, y: team.toPar, team: team.name, origT: p.t });
       }
       lookupTable.push({ cx, origT: p.t });
     }
 
-    const roundDuration = pts[pts.length - 1].t - roundStart;
-    cursor += roundDuration;
+    cursor += pts[pts.length - 1].t - segStart;
   }
 
   // For tick labels: convert compressed x back to a real time
   function xToLabel(cx) {
-    // Find closest entry
     let best = lookupTable[0];
     let bestDist = Infinity;
     for (const entry of lookupTable) {
