@@ -1340,7 +1340,15 @@ function renderChart(teamResults, competitors, annotationsObj) {
     return;
   }
 
-  progressChartInstance = new Chart(canvas, {
+  // Defer chart creation to ensure the canvas is fully laid out in the DOM.
+  // Chart.js 4.4.1 can throw "Cannot read properties of null (addEventListener)"
+  // if the canvas isn't painted yet when bindUserEvents runs.
+  function createChart() {
+    // Destroy any orphaned chart on this canvas (e.g., from a failed prior attempt)
+    const existing = Chart.getChart(canvas);
+    if (existing) { try { existing.destroy(); } catch(e) {} }
+
+    progressChartInstance = new Chart(canvas, {
     type: "line",
     data: { datasets },
     options: {
@@ -1420,6 +1428,19 @@ function renderChart(teamResults, competitors, annotationsObj) {
       }
     }
   });
+  }
+  // Try immediately; if it fails, retry on next animation frame
+  try {
+    createChart();
+  } catch (e) {
+    console.warn("Chart creation deferred:", e.message);
+    progressChartInstance = null;
+    requestAnimationFrame(() => {
+      try { createChart(); } catch (e2) {
+        console.error("Chart creation failed:", e2.message);
+      }
+    });
+  }
 }
 
 // ============================================================
