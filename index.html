@@ -390,6 +390,7 @@
   }
 
   /* Cut-danger / missed name highlight */
+  .golfer-name.cut-bubble { color: #facc15; }
   .golfer-name.cut-danger { color: #fb923c; }
   .golfer-name.cut-missed {
     color: #f87171;
@@ -1047,6 +1048,7 @@ function renderStandings(teams, leader, ranked, cutLineInfo, hcByGolferId) {
       const cb = classifyCut(g, cutLineInfo);
       let nameClass = "";
       if (cb === "danger") nameClass = " cut-danger";
+      else if (cb === "bubble") nameClass = " cut-bubble";
       else if (cb === "missed" || g.cut) nameClass = " cut-missed";
 
       // Hot / cold badge — right next to the name
@@ -1546,8 +1548,8 @@ function classifyCut(g, cutLineInfo) {
   // the existing `g.cut` flag takes over via the `cut` CSS class.
   if (g.cut) return "missed";
   const diff = (g.toPar || 0) - cutLineInfo.projected;
-  if (diff <= -2) return "safe";
-  if (diff <= 1)  return "bubble";
+  if (diff < 0) return "safe";
+  if (diff === 0) return "bubble";
   return "danger";
 }
 
