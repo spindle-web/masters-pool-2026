@@ -969,7 +969,16 @@ async function load() {
     const hcByGolferId = await fetchHotCold();
     renderStandings(teamResults, leader, ranked, cutLineInfo, hcByGolferId);
     recordSnapshot(teamResults);
-    renderChart(teamResults, competitors, {});
+    // Defer chart to next frame — Chart.js 4.4.1 throws addEventListener errors
+    // if constructed synchronously inside the same task that modifies the DOM heavily
+    // (standings, cut banner, leaderboard). Deferring lets the browser settle first.
+    window._chartPending = { competitors };
+    requestAnimationFrame(() => {
+      if (!window._chartPending) return;
+      const { competitors: c } = window._chartPending;
+      window._chartPending = null;
+      try { renderChart([], c, {}); } catch (e) { console.warn("Chart render error:", e.message); }
+    });
   } catch (err) {
     console.error(err);
     statusBar.innerHTML = `<span class="error">⚠ Couldn't load live scores (${err.message}). Retrying in 2 min.</span>`;
