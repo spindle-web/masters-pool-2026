@@ -1351,6 +1351,10 @@ function renderChart(teamResults, competitors, annotationsObj) {
   const existing = Chart.getChart(canvas);
   if (existing) { try { existing.destroy(); } catch(e) {} }
 
+  // Chart.js 4.4.1 may throw during bindUserEvents (addEventListener on null)
+  // but the chart is fully created by that point. Catch the late error and
+  // retrieve the instance via Chart.getChart().
+  try {
   progressChartInstance = new Chart(canvas, {
     type: "line",
     data: { datasets },
@@ -1431,6 +1435,14 @@ function renderChart(teamResults, competitors, annotationsObj) {
       }
     }
   });
+  } catch (chartErr) {
+    // Chart.js 4.4.1 may throw during late event-binding phase, but the chart
+    // is already created on the canvas by that point. Recover the instance.
+    progressChartInstance = Chart.getChart(canvas) || null;
+    if (!progressChartInstance) {
+      console.error("Chart creation truly failed:", chartErr.message);
+    }
+  }
 }
 
 // ============================================================
