@@ -969,16 +969,14 @@ async function load() {
     const hcByGolferId = await fetchHotCold();
     renderStandings(teamResults, leader, ranked, cutLineInfo, hcByGolferId);
     recordSnapshot(teamResults);
-    // Defer chart to next frame — Chart.js 4.4.1 throws addEventListener errors
-    // if constructed synchronously inside the same task that modifies the DOM heavily
-    // (standings, cut banner, leaderboard). Deferring lets the browser settle first.
-    window._chartPending = { competitors };
-    requestAnimationFrame(() => {
-      if (!window._chartPending) return;
-      const { competitors: c } = window._chartPending;
-      window._chartPending = null;
-      try { renderChart([], c, {}); } catch (e) { console.warn("Chart render error:", e.message); }
-    });
+    // Defer chart rendering to a separate task (setTimeout 0).
+    // Chart.js 4.4.1 can crash with addEventListener-on-null when constructed
+    // in the same microtask as heavy DOM mutations.
+    const _competitors = competitors;
+    setTimeout(() => {
+      try { renderChart([], _competitors, {}); }
+      catch (e) { console.warn("Chart render error:", e.message); }
+    }, 0);
   } catch (err) {
     console.error(err);
     statusBar.innerHTML = `<span class="error">⚠ Couldn't load live scores (${err.message}). Retrying in 2 min.</span>`;
@@ -1349,15 +1347,11 @@ function renderChart(teamResults, competitors, annotationsObj) {
     return;
   }
 
-  // Defer chart creation to ensure the canvas is fully laid out in the DOM.
-  // Chart.js 4.4.1 can throw "Cannot read properties of null (addEventListener)"
-  // if the canvas isn't painted yet when bindUserEvents runs.
-  function createChart() {
-    // Destroy any orphaned chart on this canvas (e.g., from a failed prior attempt)
-    const existing = Chart.getChart(canvas);
-    if (existing) { try { existing.destroy(); } catch(e) {} }
+  // Destroy any orphaned chart on this canvas (e.g., from a failed prior attempt)
+  const existing = Chart.getChart(canvas);
+  if (existing) { try { existing.destroy(); } catch(e) {} }
 
-    progressChartInstance = new Chart(canvas, {
+  progressChartInstance = new Chart(canvas, {
     type: "line",
     data: { datasets },
     options: {
@@ -1437,19 +1431,6 @@ function renderChart(teamResults, competitors, annotationsObj) {
       }
     }
   });
-  }
-  // Try immediately; if it fails, retry on next animation frame
-  try {
-    createChart();
-  } catch (e) {
-    console.warn("Chart creation deferred:", e.message);
-    progressChartInstance = null;
-    requestAnimationFrame(() => {
-      try { createChart(); } catch (e2) {
-        console.error("Chart creation failed:", e2.message);
-      }
-    });
-  }
 }
 
 // ============================================================
