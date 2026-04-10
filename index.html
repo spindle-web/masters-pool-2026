@@ -1274,9 +1274,11 @@ function compressTimeline(allPoints) {
     const segStart = pts[0].t;
 
     if (si > 0) {
-      // Determine which round just ended (from the previous segment's last point)
-      const prevRound = roundOf(segments[si - 1][segments[si - 1].length - 1].t);
-      dividers.push({ x: cursor + GAP_MS / 2, round: prevRound });
+      // Label the divider using the round of the first point in each segment.
+      // e.g., segment 0 starts in R1 play, segment 1 starts in R2 play → "R1 | R2"
+      const prevSegRound = roundOf(segments[si - 1][0].t);
+      const thisSegRound = roundOf(pts[0].t);
+      dividers.push({ x: cursor + GAP_MS / 2, prevRound: prevSegRound, nextRound: thisSegRound });
       cursor += GAP_MS;
     }
 
@@ -1366,7 +1368,7 @@ function renderChart(teamResults, competitors, annotationsObj) {
       borderDash: [6, 4],
       label: {
         display: true,
-        content: `R${d.round} | R${d.round + 1}`,
+        content: `R${d.prevRound} | R${d.nextRound}`,
         position: "start",
         color: "rgba(249, 224, 118, 0.7)",
         backgroundColor: "rgba(0,36,24,0.8)",
