@@ -1131,20 +1131,43 @@ async function fetchServerSnapshots() {
   try {
     const r = await fetch(`${WORKER_URL}/snapshots`);
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const data = await r.json();
-    if (Array.isArray(data) && data.length > 0) {
-      _cachedServerSnapshots = data;
-      // Cache in localStorage as fallback
-      try { localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(data)); } catch (e) {}
-      return data;
+    const serverData = await r.json();
+    if (Array.isArray(serverData)) {
+      // Merge server snapshots with any existing localStorage history.
+      // This preserves R1/R2 data captured client-side before the worker
+      // started recording, while letting server data take over going forward.
+      let localData = [];
+      try { localData = JSON.parse(localStorage.getItem(SNAPSHOT_KEY) || "[]"); } catch (e) {}
+      const merged = mergeSnapshots(localData, serverData);
+      _cachedServerSnapshots = merged;
+      try { localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(merged)); } catch (e) {}
+      return merged;
     }
   } catch (e) {
     console.warn("Failed to fetch server snapshots:", e.message);
   }
-  // Fall back to cached or localStorage
   if (_cachedServerSnapshots) return _cachedServerSnapshots;
   try { return JSON.parse(localStorage.getItem(SNAPSHOT_KEY) || "[]"); }
   catch (e) { return []; }
+}
+
+function mergeSnapshots(local, server) {
+  // Combine both arrays, deduplicate by timestamp (within 30s window),
+  // prefer server entries when timestamps overlap.
+  const all = [...local, ...server];
+  all.sort((a, b) => a.t - b.t);
+  const deduped = [];
+  for (const snap of all) {
+    const last = deduped[deduped.length - 1];
+    if (last && Math.abs(snap.t - last.t) < 30000 &&
+        JSON.stringify(snap.teams) === JSON.stringify(last.teams)) {
+      continue; // duplicate
+    }
+    deduped.push(snap);
+  }
+  // Cap at MAX_SNAPSHOTS
+  while (deduped.length > MAX_SNAPSHOTS) deduped.shift();
+  return deduped;
 }
 
 function loadSnapshots() {
