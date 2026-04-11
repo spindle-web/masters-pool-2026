@@ -985,13 +985,14 @@ async function load() {
     const hcByGolferId = await fetchHotCold();
     renderStandings(teamResults, leader, ranked, cutLineInfo, hcByGolferId);
     recordSnapshot(teamResults);
-    // Defer chart rendering to a separate task (setTimeout 0).
-    // Chart.js 4.4.1 can crash with addEventListener-on-null when constructed
-    // in the same microtask as heavy DOM mutations.
+    // Fetch centralized snapshots from the worker, then render the chart.
+    // Deferred to a separate task to avoid Chart.js 4.4.1 addEventListener crash.
     const _competitors = competitors;
-    setTimeout(() => {
-      try { renderChart([], _competitors, {}); }
-      catch (e) { console.warn("Chart render error:", e.message); }
+    setTimeout(async () => {
+      try {
+        await fetchServerSnapshots();
+        renderChart([], _competitors, {});
+      } catch (e) { console.warn("Chart render error:", e.message); }
     }, 0);
   } catch (err) {
     console.error(err);
@@ -1119,40 +1120,44 @@ function renderStandings(teams, leader, ranked, cutLineInfo, hcByGolferId) {
 }
 
 // ============ CHART: SNAPSHOTS + RECONSTRUCTION ============
-function loadSnapshots() {
+//
+// Snapshots are recorded centrally by the Cloudflare Worker (every 2min tick)
+// and served via /snapshots. This ensures every device sees the same chart.
+// localStorage is kept as a fallback cache in case the fetch fails.
+
+let _cachedServerSnapshots = null;
+
+async function fetchServerSnapshots() {
+  try {
+    const r = await fetch(`${WORKER_URL}/snapshots`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    if (Array.isArray(data) && data.length > 0) {
+      _cachedServerSnapshots = data;
+      // Cache in localStorage as fallback
+      try { localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(data)); } catch (e) {}
+      return data;
+    }
+  } catch (e) {
+    console.warn("Failed to fetch server snapshots:", e.message);
+  }
+  // Fall back to cached or localStorage
+  if (_cachedServerSnapshots) return _cachedServerSnapshots;
   try { return JSON.parse(localStorage.getItem(SNAPSHOT_KEY) || "[]"); }
   catch (e) { return []; }
 }
-function saveSnapshots(arr) {
-  try { localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(arr)); } catch (e) {}
+
+function loadSnapshots() {
+  // Synchronous access for chart rendering — returns cached server data or localStorage
+  if (_cachedServerSnapshots) return _cachedServerSnapshots;
+  try { return JSON.parse(localStorage.getItem(SNAPSHOT_KEY) || "[]"); }
+  catch (e) { return []; }
 }
+
+// recordSnapshot is now a no-op for the client — the worker handles this.
+// Kept as a stub so call sites don't need to change.
 function recordSnapshot(teamResults) {
-  const snaps = loadSnapshots();
-  const t = Date.now();
-  const entry = {
-    t,
-    teams: teamResults.map(tr => ({ name: tr.name, toPar: tr.totalToPar }))
-  };
-  // Skip pre-tournament zeros so the chart doesn't start with a flat-at-E line
-  const anyNonZero = entry.teams.some(t => t.toPar !== 0);
-  const anyRealData = teamResults.some(tr => tr.totalStrokes > 0);
-  if (!anyNonZero && !anyRealData) return;
-  // Skip if no tracked golfer is currently playing (between rounds or after
-  // everyone has finished). We still want to capture the final in-round
-  // state, so only skip once the last snapshot already reflects this same
-  // idle state — that way the moment the round completes gets recorded,
-  // and subsequent idle ticks are suppressed until play resumes.
-  const anyLive = teamResults.some(tr =>
-    tr.golferData?.some(g => g.stateName === "in")
-  );
-  const last = snaps[snaps.length - 1];
-  const sameAsLast = last && JSON.stringify(last.teams) === JSON.stringify(entry.teams);
-  if (!anyLive && sameAsLast) return;
-  // Skip if last snapshot is identical and very recent (<60s)
-  if (last && (t - last.t) < 60000 && sameAsLast) return;
-  snaps.push(entry);
-  while (snaps.length > MAX_SNAPSHOTS) snaps.shift();
-  saveSnapshots(snaps);
+  // Worker records snapshots centrally. Nothing to do client-side.
 }
 
 function reconstructRoundBoundaries(competitors) {
