@@ -1691,6 +1691,45 @@
   renderFullRoster();
   // Render team stats after a tick so bars animate in
   setTimeout(renderTeamStats, 150);
+
+  // ============ DYNAMIC: ARCHIVED TOURNAMENTS ============
+  // Fetches /archives from the worker and appends a card per archived
+  // tournament beyond the hardcoded Masters '26.
+  const WORKER_URL = "https://masters-pool-notifier.spindle-web.workers.dev";
+  (async function loadArchives() {
+    try {
+      const r = await fetch(WORKER_URL + '/archives');
+      if (!r.ok) return;
+      const j = await r.json();
+      const arr = (j.archives || []).filter(a => a && a.id && a.name);
+      // Filter out Masters '26 (already hardcoded) by matching name
+      const extras = arr.filter(a => !/masters.*2026/i.test(a.name));
+      if (!extras.length) return;
+      const section = document.createElement('section');
+      section.style.cssText = 'padding:60px 40px;max-width:1200px;margin:0 auto;';
+      section.innerHTML = `
+        <h2 style="font-family:'Playfair Display',serif;font-size:36px;color:var(--theme-accent);text-align:center;margin-bottom:28px;">Archived Tournaments</h2>
+        <div id="archiveCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;"></div>
+      `;
+      document.querySelector('main').appendChild(section);
+      const cardsDiv = section.querySelector('#archiveCards');
+      extras.forEach(a => {
+        const teams = (a.teams || []).map(t => {
+          const total = (t.finalScore != null) ? t.finalScore : null;
+          return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(212,175,55,0.1);"><span>${t.name}</span><span style="color:var(--theme-accent);font-weight:700;">${total != null ? (total > 0 ? '+'+total : total) : '—'}</span></div>`;
+        }).join('');
+        const card = document.createElement('div');
+        card.style.cssText = 'background:linear-gradient(135deg,rgba(42,24,16,0.9),rgba(26,15,8,0.95));border:1px solid rgba(212,175,55,0.2);border-radius:12px;padding:24px;';
+        card.innerHTML = `
+          <div style="font-family:'Playfair Display',serif;font-size:24px;color:var(--theme-accent);margin-bottom:4px;">${a.name}</div>
+          <div style="color:var(--cream-dim);font-size:13px;margin-bottom:16px;">${a.course || ''} · Pot $${a.pot || 0}</div>
+          ${teams}
+          ${a.winner ? `<div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(212,175,55,0.2);color:var(--masters-yellow);font-weight:600;">🏆 Winner: ${a.winner}</div>` : ''}
+        `;
+        cardsDiv.appendChild(card);
+      });
+    } catch (e) { console.warn('archives load failed', e); }
+  })();
 </script>
 </body>
 </html>

@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Majors Pool — Draft Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --wood-dark: #2a1810;
+    --wood-mid: #4a2c1a;
+    --wood-light: #6b3e24;
+    --masters-green: #0b3b2a;
+    --masters-yellow: #f9e076;
+    --masters-gold: #d4af37;
+    --gold-bright: #f0c755;
+    --cream: #f5efdc;
+    --cream-dim: #d9d2bc;
+    --ink: #1a0f08;
+    --theme-primary: var(--masters-green);
+    --theme-accent: var(--masters-gold);
+    --theme-deep: #04180f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: linear-gradient(180deg, var(--theme-deep) 0%, #0a1f15 100%);
+    color: var(--cream);
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(249,224,118,0.04) 0%, transparent 40%),
+      radial-gradient(circle at 80% 60%, rgba(11,59,42,0.12) 0%, transparent 50%);
+    pointer-events: none; z-index: 0;
+  }
+  main { position: relative; z-index: 2; }
+  h1, h2, h3 { font-family: 'Playfair Display', Georgia, serif; letter-spacing: -0.01em; }
+  h2 { font-size: 28px; font-weight: 700; margin-bottom: 18px; color: var(--theme-accent); }
+  h3 { font-size: 20px; font-weight: 600; margin-bottom: 12px; }
+
+  nav.top {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 24px 40px; max-width: 1400px; margin: 0 auto;
+  }
+  nav.top a {
+    color: var(--cream-dim); text-decoration: none; font-size: 12px;
+    letter-spacing: 2px; text-transform: uppercase; font-weight: 500;
+    transition: color 0.3s;
+  }
+  nav.top a:hover { color: var(--theme-accent); }
+  nav.top .brand {
+    font-family: 'Playfair Display', serif; font-style: italic; font-size: 22px;
+    color: var(--theme-accent); text-transform: none; letter-spacing: 0;
+  }
+  nav.top .links { display: flex; gap: 28px; }
+
+  .hero {
+    text-align: center; padding: 30px 20px 40px;
+  }
+  .hero h1 {
+    font-size: clamp(40px, 7vw, 72px); font-weight: 900;
+    background: linear-gradient(135deg, var(--masters-gold) 0%, var(--masters-yellow) 50%, var(--masters-gold) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    margin-bottom: 10px;
+  }
+  .hero .sub {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 20px; color: var(--cream-dim);
+  }
+
+  .container {
+    max-width: 1400px; margin: 0 auto; padding: 0 40px;
+  }
+
+  .card {
+    background: linear-gradient(135deg, rgba(42,24,16,0.9) 0%, rgba(26,15,8,0.95) 100%);
+    border: 1px solid rgba(212,175,55,0.2);
+    border-radius: 12px; padding: 28px; margin-bottom: 24px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .card-title {
+    font-family: 'Playfair Display', serif; font-size: 24px;
+    color: var(--theme-accent); margin-bottom: 20px;
+    border-bottom: 1px solid rgba(212,175,55,0.25); padding-bottom: 10px;
+  }
+
+  label { display: block; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--cream-dim); margin-bottom: 6px; font-weight: 600; }
+  input[type=text], input[type=number], input[type=password], input[type=datetime-local], input[type=color], select, textarea {
+    width: 100%; padding: 10px 14px;
+    background: rgba(26,15,8,0.6); color: var(--cream);
+    border: 1px solid rgba(212,175,55,0.25); border-radius: 8px;
+    font-family: 'Inter', sans-serif; font-size: 14px;
+    transition: all 0.2s;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none; border-color: var(--theme-accent);
+    box-shadow: 0 0 0 3px rgba(212,175,55,0.15);
+  }
+  input[type=color] { padding: 2px; height: 40px; cursor: pointer; }
+
+  .field { margin-bottom: 16px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  @media (max-width: 700px) { .grid2,.grid3,.grid4 { grid-template-columns: 1fr; } }
+
+  button, .btn {
+    padding: 10px 22px; font-family: 'Inter', sans-serif;
+    font-size: 13px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+    border-radius: 8px; border: none; cursor: pointer;
+    transition: all 0.2s; text-decoration: none; display: inline-block;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--masters-gold), var(--masters-yellow));
+    color: var(--wood-dark);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(212,175,55,0.4); }
+  .btn-ghost {
+    background: transparent; color: var(--cream-dim);
+    border: 1px solid rgba(212,175,55,0.3);
+  }
+  .btn-ghost:hover { border-color: var(--theme-accent); color: var(--theme-accent); }
+  .btn-danger { background: rgba(160,29,63,0.3); color: #ffc0c0; border: 1px solid rgba(160,29,63,0.5); }
+  .btn-danger:hover { background: rgba(160,29,63,0.5); }
+  .btn-sm { padding: 6px 14px; font-size: 11px; }
+
+  .toast {
+    position: fixed; top: 20px; right: 20px;
+    padding: 12px 20px; background: var(--theme-accent); color: var(--wood-dark);
+    border-radius: 8px; font-weight: 600; font-size: 14px;
+    z-index: 1000; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    animation: slideIn 0.3s ease-out;
+  }
+  .toast.error { background: #a01d3f; color: white; }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* ====== LOGIN GATE ====== */
+  .gate {
+    max-width: 400px; margin: 80px auto; padding: 40px; text-align: center;
+  }
+  .gate h1 { font-size: 36px; margin-bottom: 10px; color: var(--theme-accent); }
+  .gate .sub { color: var(--cream-dim); margin-bottom: 28px; font-style: italic; }
+
+  /* ====== PLAYERS ====== */
+  .player-row {
+    display: grid; grid-template-columns: 50px 1fr 80px 100px; gap: 12px;
+    align-items: center; padding: 10px 0;
+    border-bottom: 1px solid rgba(212,175,55,0.08);
+  }
+  .player-swatch {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 2px solid rgba(245,239,220,0.3);
+  }
+
+  /* ====== DRAFT BOARD ====== */
+  .draft-flex { display: grid; grid-template-columns: 320px 1fr; gap: 24px; }
+  @media (max-width: 900px) { .draft-flex { grid-template-columns: 1fr; } }
+
+  .team-col {
+    background: rgba(11,59,42,0.2); border: 1px solid rgba(212,175,55,0.2);
+    border-radius: 10px; padding: 14px; margin-bottom: 14px;
+    transition: all 0.3s;
+  }
+  .team-col.active {
+    border-color: var(--theme-accent);
+    box-shadow: 0 0 0 2px rgba(212,175,55,0.3);
+    background: rgba(212,175,55,0.1);
+  }
+  .team-col-head {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .team-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .team-roster { list-style: none; padding: 0; }
+  .team-roster li {
+    padding: 6px 10px; margin: 4px 0; border-radius: 6px;
+    background: rgba(26,15,8,0.5); font-size: 13px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .team-roster li .pick-num { font-size: 10px; color: var(--cream-dim); }
+
+  .draft-status {
+    padding: 14px 20px; background: linear-gradient(90deg, rgba(212,175,55,0.18), transparent);
+    border-left: 4px solid var(--theme-accent);
+    border-radius: 6px; margin-bottom: 16px;
+  }
+  .draft-status .big {
+    font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700;
+  }
+
+  /* ====== GOLFER LIST ====== */
+  .golfer-search {
+    margin-bottom: 14px;
+  }
+  .golfer-list {
+    max-height: 600px; overflow-y: auto;
+    border: 1px solid rgba(212,175,55,0.15); border-radius: 10px;
+  }
+  .golfer-row {
+    display: grid; grid-template-columns: 36px 1fr 80px 80px 100px; gap: 10px;
+    padding: 10px 14px; align-items: center;
+    border-bottom: 1px solid rgba(212,175,55,0.08);
+    font-size: 14px;
+  }
+  .golfer-row:hover:not(.drafted) { background: rgba(212,175,55,0.08); }
+  .golfer-row.drafted { opacity: 0.35; text-decoration: line-through; }
+  .golfer-rank {
+    font-family: 'Playfair Display', serif; font-weight: 700;
+    color: var(--theme-accent); font-size: 16px;
+  }
+  .golfer-prob { color: var(--masters-yellow); font-weight: 600; }
+  .golfer-wr { color: var(--cream-dim); font-size: 12px; }
+
+  .hidden { display: none !important; }
+
+  .draft-order-pill {
+    display: inline-block; padding: 6px 12px;
+    background: rgba(26,15,8,0.6); border-radius: 999px;
+    margin: 4px 4px 4px 0; font-size: 13px;
+    border: 1px solid rgba(212,175,55,0.3);
+  }
+  .draft-order-pill.current {
+    background: var(--theme-accent); color: var(--wood-dark); font-weight: 700;
+  }
+
+  .pill-btn {
+    background: transparent; border: 1px solid rgba(212,175,55,0.4);
+    color: var(--cream); padding: 4px 10px; border-radius: 999px;
+    font-size: 12px; cursor: pointer; margin-left: 4px;
+  }
+
+  .help { font-size: 12px; color: var(--cream-dim); margin-top: 4px; font-style: italic; }
+
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 999px;
+    font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+    background: rgba(212,175,55,0.2); color: var(--theme-accent);
+    font-weight: 600; margin-left: 8px;
+  }
+  .badge-live { background: rgba(74,222,128,0.2); color: #4ade80; }
+  .badge-setup { background: rgba(249,224,118,0.2); color: var(--masters-yellow); }
+
+  .inline-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<nav class="top">
+  <div class="links">
+    <a href="index.html">← Tracker</a>
+    <a href="history.html">Trophy Room</a>
+  </div>
+  <div class="brand">The Draft Room</div>
+  <div class="links"><a href="#" id="logoutBtn" class="hidden">Log out</a></div>
+</nav>
+
+<main>
+<div id="gateView" class="gate hidden">
+  <h1>Draft Room</h1>
+  <div class="sub">Commissioner access required</div>
+  <div class="field">
+    <input id="pwInput" type="password" placeholder="Admin password" />
+  </div>
+  <div id="initHelp" class="help hidden">No password set yet. Create one — you'll use this to run every future draft.</div>
+  <button class="btn btn-primary" id="loginBtn" style="margin-top:12px;width:100%;">Enter</button>
+</div>
+
+<div id="appView" class="hidden">
+  <div class="hero">
+    <h1>Draft Room</h1>
+    <div class="sub">Set the tournament. Run the draft. Ignite the pool.</div>
+  </div>
+
+  <div class="container">
+
+    <!-- ACTIVE TOURNAMENT HEADER -->
+    <div class="card" id="activeCard">
+      <div class="inline-row" style="justify-content:space-between;margin-bottom:10px;">
+        <h2 style="margin:0;">Active Tournament</h2>
+        <div id="activeBadge"></div>
+      </div>
+      <div id="activeSummary"></div>
+      <div style="margin-top:16px;" class="inline-row">
+        <button class="btn btn-ghost btn-sm" id="editTournamentBtn">Edit setup</button>
+        <button class="btn btn-ghost btn-sm" id="reshuffleBtn">Re-shuffle order</button>
+        <button class="btn btn-ghost btn-sm" id="goLiveBtn">Mark live</button>
+        <button class="btn btn-ghost btn-sm" id="markCompleteBtn">Mark complete</button>
+        <button class="btn btn-danger btn-sm" id="archiveResetBtn">Archive & start new</button>
+      </div>
+    </div>
+
+    <!-- TOURNAMENT SETUP FORM -->
+    <div class="card hidden" id="setupCard">
+      <div class="card-title">Tournament Setup</div>
+      <div class="grid2">
+        <div class="field">
+          <label>Tournament name</label>
+          <input id="f_name" type="text" placeholder="PGA Championship 2026" />
+        </div>
+        <div class="field">
+          <label>Course</label>
+          <input id="f_course" type="text" placeholder="Aronimink Golf Club" />
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>ESPN event ID</label>
+          <input id="f_eventId" type="text" placeholder="401726029" />
+          <div class="help">Find on espn.com/golf — e.g. `/golf/leaderboard/_/tournamentId/401726029`</div>
+        </div>
+        <div class="field">
+          <label>Theme</label>
+          <select id="f_theme">
+            <option value="masters">Masters (green & gold)</option>
+            <option value="pga">PGA Championship (deep blue)</option>
+            <option value="usopen">U.S. Open (crimson)</option>
+            <option value="open">The Open (claret)</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid4">
+        <div class="field">
+          <label>Pot ($)</label>
+          <input id="f_pot" type="number" value="75" />
+        </div>
+        <div class="field">
+          <label>Golfers / team</label>
+          <input id="f_golfersPerTeam" type="number" value="6" min="1" max="20" />
+        </div>
+        <div class="field">
+          <label>Cut penalty / weekend round</label>
+          <input id="f_cutPenalty" type="number" value="3" />
+        </div>
+        <div class="field">
+          <label>Par / round</label>
+          <input id="f_par" type="number" value="72" />
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Start (local time)</label>
+          <input id="f_start" type="datetime-local" />
+        </div>
+        <div class="field">
+          <label>End (local time)</label>
+          <input id="f_end" type="datetime-local" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Winner bonus (optional blurb)</label>
+        <input id="f_winnerBonus" type="text" placeholder="If your drafted golfer wins, others owe $10 each" />
+      </div>
+      <div class="inline-row" style="margin-top:12px;">
+        <button class="btn btn-primary" id="saveSetupBtn">Save setup</button>
+        <button class="btn btn-ghost" id="cancelSetupBtn">Cancel</button>
+      </div>
+    </div>
+
+    <!-- PLAYERS -->
+    <div class="card">
+      <div class="card-title">Pool Members</div>
+      <div id="playersList"></div>
+      <div class="inline-row" style="margin-top:14px;">
+        <input id="newPlayerName" type="text" placeholder="Add a new player" style="flex:1;min-width:150px;" />
+        <input id="newPlayerColor" type="color" value="#8b5cf6" style="width:60px;" />
+        <button class="btn btn-primary btn-sm" id="addPlayerBtn">Add player</button>
+      </div>
+      <div class="help">Colors show up on the tracker, chart, and leaderboards. Yellow, green, red are reserved for the originals.</div>
+      <div style="margin-top:18px;">
+        <div class="inline-row">
+          <label style="flex:1;">Include in current tournament:</label>
+        </div>
+        <div id="playerIncludeList" style="margin-top:8px;"></div>
+      </div>
+    </div>
+
+    <!-- DRAFT ORDER -->
+    <div class="card" id="draftOrderCard">
+      <div class="card-title">Draft Order</div>
+      <div id="draftOrderPills"></div>
+      <div class="inline-row" style="margin-top:14px;">
+        <button class="btn btn-ghost" id="shuffleBtn">🎲 Shuffle</button>
+        <button class="btn btn-ghost" id="manualOrderBtn">Set manually</button>
+      </div>
+      <div class="help">Snake draft — 1,2,3 → 3,2,1 → 1,2,3 ...</div>
+    </div>
+
+    <!-- DRAFT BOARD -->
+    <div class="card" id="draftCard">
+      <div class="card-title">The Draft</div>
+      <div class="draft-status" id="draftStatus"></div>
+      <div class="draft-flex">
+        <div id="teamsColumn"></div>
+        <div>
+          <div class="inline-row" style="margin-bottom:10px;">
+            <input class="golfer-search" id="golferSearch" type="text" placeholder="Search golfers…" style="flex:1;" />
+            <button class="btn btn-ghost btn-sm" id="refreshFieldBtn">⟳ Field</button>
+          </div>
+          <div id="oddsSource" class="help" style="margin-bottom:8px;"></div>
+          <div class="golfer-list" id="golferList"></div>
+        </div>
+      </div>
+      <div class="inline-row" style="margin-top:18px;">
+        <button class="btn btn-ghost" id="undoPickBtn">↶ Undo last pick</button>
+        <button class="btn btn-primary" id="completeDraftBtn">Complete draft → activate tournament</button>
+      </div>
+    </div>
+
+    <!-- ADVANCED -->
+    <details class="card" style="padding:16px 28px;">
+      <summary style="cursor:pointer;font-weight:600;color:var(--theme-accent);font-family:'Playfair Display',serif;font-size:18px;">Advanced settings</summary>
+      <div style="margin-top:18px;">
+        <div class="field">
+          <label>DataGolf API key (optional, for win probabilities)</label>
+          <div class="inline-row">
+            <input id="dgKeyInput" type="password" placeholder="Paste key and save" style="flex:1;" />
+            <button class="btn btn-primary btn-sm" id="saveDgKeyBtn">Save key</button>
+          </div>
+          <div class="help">Free signup at datagolf.com/api-access-model. Without this, golfers sort by world ranking.</div>
+          <div id="dgKeyStatus" class="help"></div>
+        </div>
+        <div class="field">
+          <label>Change admin password</label>
+          <div class="inline-row">
+            <input id="newPwInput" type="password" placeholder="New password" style="flex:1;" />
+            <button class="btn btn-ghost btn-sm" id="changePwBtn">Change</button>
+          </div>
+        </div>
+      </div>
+    </details>
+
+  </div>
+</div>
+</main>
+
+<script>
+const WORKER_URL = "https://masters-pool-notifier.spindle-web.workers.dev";
+const TOKEN_KEY = "majors_admin_token";
+
+let ADMIN_TOKEN = null;
+let STATE = {
+  players: [],
+  tournament: null,
+  field: [],
+  oddsSource: "",
+  draftOrder: [], // array of playerIds
+  currentPickIndex: 0, // which pick number (0-based)
+  picks: [], // array of { playerId, golferId, golferName, pickNum }
+};
+
+/* ===================== UTILITIES ===================== */
+function toast(msg, opts={}) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (opts.error ? ' error' : '');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2800);
+}
+async function api(path, opts={}) {
+  const headers = { 'content-type': 'application/json', ...(opts.headers||{}) };
+  if (ADMIN_TOKEN) headers['x-admin-token'] = ADMIN_TOKEN;
+  const r = await fetch(WORKER_URL + path, { ...opts, headers });
+  if (r.status === 401) {
+    logout();
+    throw new Error('unauthorized');
+  }
+  return r.json();
+}
+function uid() { return Math.random().toString(36).slice(2, 9); }
+function toLocalInput(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function fromLocalInput(s) {
+  return s ? new Date(s).toISOString() : null;
+}
+
+/* ===================== AUTH ===================== */
+async function tryLogin(pw) {
+  // First try login endpoint
+  const r = await fetch(WORKER_URL + '/admin/login', {
+    method: 'POST', headers: {'content-type':'application/json'},
+    body: JSON.stringify({ password: pw })
+  });
+  if (r.status === 401) {
+    // Check if admin is initialized
+    const initR = await fetch(WORKER_URL + '/admin/init', {
+      method: 'POST', headers: {'content-type':'application/json'},
+      body: JSON.stringify({ password: pw })
+    });
+    const initJson = await initR.json();
+    if (initJson.ok) {
+      // Successfully initialized — use as token
+      return true;
+    }
+    return false;
+  }
+  const j = await r.json();
+  return !!j.ok;
+}
+
+async function logout() {
+  ADMIN_TOKEN = null;
+  localStorage.removeItem(TOKEN_KEY);
+  document.getElementById('gateView').classList.remove('hidden');
+  document.getElementById('appView').classList.add('hidden');
+  document.getElementById('logoutBtn').classList.add('hidden');
+}
+
+document.getElementById('loginBtn').onclick = async () => {
+  const pw = document.getElementById('pwInput').value.trim();
+  if (!pw) return;
+  const ok = await tryLogin(pw);
+  if (!ok) { toast('Wrong password', {error:true}); return; }
+  ADMIN_TOKEN = pw;
+  localStorage.setItem(TOKEN_KEY, pw);
+  await enterApp();
+};
+document.getElementById('logoutBtn').onclick = (e) => { e.preventDefault(); logout(); };
+
+document.getElementById('pwInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('loginBtn').click();
+});
+
+/* ===================== LOAD ===================== */
+async function enterApp() {
+  document.getElementById('gateView').classList.add('hidden');
+  document.getElementById('appView').classList.remove('hidden');
+  document.getElementById('logoutBtn').classList.remove('hidden');
+  await loadAll();
+  render();
+}
+async function loadAll() {
+  const cfg = await api('/config');
+  STATE.players = cfg.players || [];
+  STATE.tournament = cfg.tournament || null;
+  if (STATE.tournament) {
+    STATE.draftOrder = STATE.tournament.draftOrder || [];
+    STATE.picks = STATE.tournament.picks || [];
+    STATE.currentPickIndex = STATE.picks.length;
+  }
+  const dgR = await api('/admin/has-key');
+  document.getElementById('dgKeyStatus').textContent =
+    dgR.hasKey ? '✓ Key saved — win probabilities active' : '(No key — sorting by world ranking)';
+}
+
+/* ===================== RENDER ===================== */
+function render() {
+  renderActive();
+  renderPlayers();
+  renderDraftOrder();
+  renderDraftBoard();
+  applyTheme();
+}
+
+function applyTheme() {
+  const theme = STATE.tournament?.theme || 'masters';
+  const themes = {
+    masters: { primary: '#0b3b2a', accent: '#d4af37', deep: '#04180f' },
+    pga:     { primary: '#193761', accent: '#d4af37', deep: '#0a1628' },
+    usopen:  { primary: '#a01d3f', accent: '#e8d9b5', deep: '#2a0a15' },
+    open:    { primary: '#722f37', accent: '#d4af37', deep: '#1a0810' },
+  };
+  const t = themes[theme] || themes.masters;
+  document.documentElement.style.setProperty('--theme-primary', t.primary);
+  document.documentElement.style.setProperty('--theme-accent', t.accent);
+  document.documentElement.style.setProperty('--theme-deep', t.deep);
+}
+
+function renderActive() {
+  const t = STATE.tournament;
+  const badge = document.getElementById('activeBadge');
+  const sum = document.getElementById('activeSummary');
+  if (!t) {
+    badge.innerHTML = '<span class="badge">No tournament</span>';
+    sum.innerHTML = '<p style="color:var(--cream-dim);font-style:italic;">Click <strong>Edit setup</strong> to configure a new tournament, then run the draft below.</p>';
+    document.getElementById('draftOrderCard').classList.add('hidden');
+    document.getElementById('draftCard').classList.add('hidden');
+    return;
+  }
+  const statusClass = t.status === 'live' ? 'badge-live' : t.status === 'setup' ? 'badge-setup' : '';
+  badge.innerHTML = `<span class="badge ${statusClass}">${t.status || 'setup'}</span>`;
+  sum.innerHTML = `
+    <div style="font-family:'Playfair Display',serif;font-size:28px;color:var(--theme-accent);">${t.name || 'Untitled'}</div>
+    <div style="color:var(--cream-dim);margin:4px 0;">${t.course || ''} · Pot $${t.pot||0} · ${t.golfersPerTeam||6} golfers/team · Cut penalty +${t.cutPenalty||3}/round</div>
+    <div style="color:var(--cream-dim);font-size:13px;">${t.startISO ? new Date(t.startISO).toLocaleString() : ''} → ${t.endISO ? new Date(t.endISO).toLocaleString() : ''}</div>
+  `;
+  document.getElementById('draftOrderCard').classList.remove('hidden');
+  document.getElementById('draftCard').classList.remove('hidden');
+}
+
+function renderPlayers() {
+  const list = document.getElementById('playersList');
+  list.innerHTML = '';
+  STATE.players.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'player-row';
+    row.innerHTML = `
+      <input type="color" value="${p.color}" data-i="${i}" class="pcolor" />
+      <input type="text" value="${p.name}" data-i="${i}" class="pname" />
+      <span class="help" style="font-family:monospace;">${p.id}</span>
+      <button class="btn btn-danger btn-sm" data-i="${i}" data-action="del-player">Remove</button>
+    `;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('.pname').forEach(inp => inp.oninput = e => {
+    STATE.players[+e.target.dataset.i].name = e.target.value;
+  });
+  list.querySelectorAll('.pcolor').forEach(inp => inp.oninput = e => {
+    STATE.players[+e.target.dataset.i].color = e.target.value;
+  });
+  list.querySelectorAll('[data-action=del-player]').forEach(btn => btn.onclick = async e => {
+    const i = +e.target.dataset.i;
+    if (!confirm(`Remove ${STATE.players[i].name}?`)) return;
+    STATE.players.splice(i, 1);
+    await savePlayers();
+    render();
+  });
+
+  // Include list for current tournament
+  const inc = document.getElementById('playerIncludeList');
+  inc.innerHTML = '';
+  STATE.players.forEach(p => {
+    const included = STATE.draftOrder.includes(p.id);
+    const btn = document.createElement('span');
+    btn.className = 'draft-order-pill' + (included ? ' current' : '');
+    btn.style.cursor = 'pointer';
+    btn.innerHTML = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin-right:6px;vertical-align:middle;"></span>${p.name}`;
+    btn.onclick = () => {
+      if (included) {
+        STATE.draftOrder = STATE.draftOrder.filter(id => id !== p.id);
+      } else {
+        STATE.draftOrder.push(p.id);
+      }
+      render();
+    };
+    inc.appendChild(btn);
+  });
+}
+
+async function savePlayers() {
+  await api('/admin/players', {
+    method: 'POST',
+    body: JSON.stringify({ players: STATE.players }),
+  });
+  toast('Players saved');
+}
+document.getElementById('addPlayerBtn').onclick = async () => {
+  const name = document.getElementById('newPlayerName').value.trim();
+  const color = document.getElementById('newPlayerColor').value;
+  if (!name) return;
+  const id = name.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,12) || uid();
+  if (STATE.players.find(p => p.id === id)) { toast('That player exists', {error:true}); return; }
+  STATE.players.push({ id, name, color });
+  await savePlayers();
+  document.getElementById('newPlayerName').value = '';
+  render();
+};
+
+function renderDraftOrder() {
+  const div = document.getElementById('draftOrderPills');
+  div.innerHTML = '';
+  if (STATE.draftOrder.length === 0) {
+    div.innerHTML = '<span class="help">Select players above to include them in the draft.</span>';
+    return;
+  }
+  STATE.draftOrder.forEach((pid, i) => {
+    const p = STATE.players.find(x => x.id === pid);
+    if (!p) return;
+    const pill = document.createElement('span');
+    pill.className = 'draft-order-pill';
+    pill.innerHTML = `${i+1}. <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin:0 6px;vertical-align:middle;"></span>${p.name}`;
+    div.appendChild(pill);
+  });
+}
+
+document.getElementById('shuffleBtn').onclick = () => {
+  const a = [...STATE.draftOrder];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  STATE.draftOrder = a;
+  render();
+};
+document.getElementById('reshuffleBtn').onclick = () => document.getElementById('shuffleBtn').click();
+document.getElementById('manualOrderBtn').onclick = () => {
+  const current = STATE.draftOrder.map(id => STATE.players.find(p=>p.id===id)?.name || id).join(', ');
+  const input = prompt('Enter draft order (comma-separated names):', current);
+  if (!input) return;
+  const names = input.split(',').map(s => s.trim()).filter(Boolean);
+  const ids = names.map(n => STATE.players.find(p => p.name.toLowerCase() === n.toLowerCase())?.id).filter(Boolean);
+  if (ids.length !== names.length) { toast('Some names didn\'t match', {error:true}); return; }
+  STATE.draftOrder = ids;
+  render();
+};
+
+/* ===================== TOURNAMENT SETUP ===================== */
+document.getElementById('editTournamentBtn').onclick = () => {
+  const t = STATE.tournament || {};
+  document.getElementById('f_name').value = t.name || '';
+  document.getElementById('f_course').value = t.course || '';
+  document.getElementById('f_eventId').value = t.eventId || '';
+  document.getElementById('f_theme').value = t.theme || 'masters';
+  document.getElementById('f_pot').value = t.pot || 75;
+  document.getElementById('f_golfersPerTeam').value = t.golfersPerTeam || 6;
+  document.getElementById('f_cutPenalty').value = t.cutPenalty || 3;
+  document.getElementById('f_par').value = t.par || 72;
+  document.getElementById('f_start').value = toLocalInput(t.startISO);
+  document.getElementById('f_end').value = toLocalInput(t.endISO);
+  document.getElementById('f_winnerBonus').value = t.winnerBonus || '';
+  document.getElementById('setupCard').classList.remove('hidden');
+  document.getElementById('setupCard').scrollIntoView({behavior:'smooth'});
+};
+document.getElementById('cancelSetupBtn').onclick = () => {
+  document.getElementById('setupCard').classList.add('hidden');
+};
+document.getElementById('saveSetupBtn').onclick = async () => {
+  const t = STATE.tournament || { id: uid(), status: 'setup', picks: [], draftOrder: [] };
+  t.name = document.getElementById('f_name').value.trim();
+  t.course = document.getElementById('f_course').value.trim();
+  t.eventId = document.getElementById('f_eventId').value.trim();
+  t.theme = document.getElementById('f_theme').value;
+  t.pot = Number(document.getElementById('f_pot').value) || 0;
+  t.golfersPerTeam = Number(document.getElementById('f_golfersPerTeam').value) || 6;
+  t.cutPenalty = Number(document.getElementById('f_cutPenalty').value) || 3;
+  t.par = Number(document.getElementById('f_par').value) || 72;
+  t.startISO = fromLocalInput(document.getElementById('f_start').value);
+  t.endISO = fromLocalInput(document.getElementById('f_end').value);
+  t.winnerBonus = document.getElementById('f_winnerBonus').value.trim();
+  t.status = t.status || 'setup';
+  t.draftOrder = STATE.draftOrder;
+  t.picks = STATE.picks;
+  t.teams = buildTeamsFromPicks();
+  STATE.tournament = t;
+  await saveTournament();
+  document.getElementById('setupCard').classList.add('hidden');
+  render();
+  await loadField();
+};
+document.getElementById('goLiveBtn').onclick = async () => {
+  if (!STATE.tournament) return toast('Set up a tournament first', {error:true});
+  STATE.tournament.status = 'live';
+  STATE.tournament.teams = buildTeamsFromPicks();
+  await saveTournament();
+  render();
+  toast('Tournament is LIVE 🟢');
+};
+document.getElementById('markCompleteBtn').onclick = async () => {
+  if (!STATE.tournament) return;
+  STATE.tournament.status = 'complete';
+  await saveTournament();
+  render();
+  toast('Marked complete');
+};
+document.getElementById('archiveResetBtn').onclick = async () => {
+  if (!STATE.tournament) return;
+  if (!confirm('Archive the current tournament and clear to start a new one?')) return;
+  // Save archive
+  await api('/admin/archive', { method: 'POST', body: JSON.stringify(STATE.tournament) });
+  // Clear active
+  const blank = { id: uid(), status: 'setup', picks: [], draftOrder: [], name: '', course: '' };
+  STATE.tournament = blank;
+  STATE.picks = [];
+  STATE.draftOrder = [];
+  await saveTournament();
+  render();
+  toast('Archived — fresh slate ready');
+};
+
+function buildTeamsFromPicks() {
+  const byPlayer = {};
+  for (const p of STATE.players) byPlayer[p.id] = [];
+  for (const pick of STATE.picks) {
+    if (byPlayer[pick.playerId]) byPlayer[pick.playerId].push(pick.golferName);
+  }
+  return STATE.draftOrder.map(pid => {
+    const pl = STATE.players.find(p => p.id === pid);
+    return {
+      playerId: pid,
+      name: pl?.name || pid,
+      color: pl?.color || '#888',
+      golfers: byPlayer[pid] || [],
+    };
+  });
+}
+
+async function saveTournament() {
+  if (!STATE.tournament) return;
+  STATE.tournament.picks = STATE.picks;
+  STATE.tournament.draftOrder = STATE.draftOrder;
+  STATE.tournament.teams = buildTeamsFromPicks();
+  await api('/admin/tournament', {
+    method: 'POST',
+    body: JSON.stringify(STATE.tournament),
+  });
+}
+
+/* ===================== DRAFT BOARD ===================== */
+function snakePlayerIdForPick(pickIdx) {
+  // pickIdx is 0-based overall pick number
+  const n = STATE.draftOrder.length;
+  if (n === 0) return null;
+  const round = Math.floor(pickIdx / n);
+  const inRound = pickIdx % n;
+  const order = round % 2 === 0 ? STATE.draftOrder : [...STATE.draftOrder].reverse();
+  return order[inRound];
+}
+
+function renderDraftBoard() {
+  const teamsCol = document.getElementById('teamsColumn');
+  const status = document.getElementById('draftStatus');
+  if (!STATE.tournament || STATE.draftOrder.length === 0) {
+    status.innerHTML = '<div class="big">Set up the tournament and draft order above.</div>';
+    teamsCol.innerHTML = '';
+    return;
+  }
+  const gpt = STATE.tournament.golfersPerTeam || 6;
+  const totalPicks = STATE.draftOrder.length * gpt;
+  const pickIdx = STATE.picks.length;
+  const done = pickIdx >= totalPicks;
+  const currentPid = done ? null : snakePlayerIdForPick(pickIdx);
+  const currentP = STATE.players.find(p => p.id === currentPid);
+
+  if (done) {
+    status.innerHTML = `<div class="big">🎉 Draft complete. Click <em>Complete draft → activate tournament</em>.</div>`;
+  } else {
+    const roundN = Math.floor(pickIdx / STATE.draftOrder.length) + 1;
+    status.innerHTML = `
+      <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--cream-dim);">Round ${roundN} · Pick ${pickIdx+1} of ${totalPicks}</div>
+      <div class="big"><span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${currentP?.color};margin-right:10px;"></span>${currentP?.name || '?'} is on the clock</div>
+    `;
+  }
+
+  // Teams
+  const picksByPlayer = {};
+  STATE.draftOrder.forEach(pid => picksByPlayer[pid] = []);
+  STATE.picks.forEach((pick, i) => picksByPlayer[pick.playerId]?.push({ ...pick, num: i+1 }));
+
+  teamsCol.innerHTML = '';
+  STATE.draftOrder.forEach(pid => {
+    const p = STATE.players.find(x => x.id === pid);
+    const roster = picksByPlayer[pid] || [];
+    const div = document.createElement('div');
+    div.className = 'team-col' + (pid === currentPid ? ' active' : '');
+    div.innerHTML = `
+      <div class="team-col-head">
+        <span class="team-dot" style="background:${p?.color}"></span>
+        ${p?.name || pid}
+        <span style="margin-left:auto;font-size:12px;color:var(--cream-dim);font-weight:400;">${roster.length}/${gpt}</span>
+      </div>
+      <ul class="team-roster">
+        ${Array.from({length: gpt}).map((_, i) => {
+          const pk = roster[i];
+          return `<li>
+            ${pk ? `<span>${pk.golferName}</span><span class="pick-num">#${pk.num}</span>`
+                 : '<span style="color:var(--cream-dim);font-style:italic;">—</span><span class="pick-num"></span>'}
+          </li>`;
+        }).join('')}
+      </ul>
+    `;
+    teamsCol.appendChild(div);
+  });
+}
+
+async function loadField() {
+  if (!STATE.tournament?.eventId) {
+    document.getElementById('golferList').innerHTML = '<div style="padding:16px;color:var(--cream-dim);">Set an ESPN event ID in tournament setup to load the field.</div>';
+    return;
+  }
+  document.getElementById('golferList').innerHTML = '<div style="padding:16px;color:var(--cream-dim);">Loading field…</div>';
+  try {
+    const r = await fetch(`${WORKER_URL}/golfers?eventId=${STATE.tournament.eventId}`);
+    const j = await r.json();
+    STATE.field = j.field || [];
+    STATE.oddsSource = j.oddsSource || '';
+    renderGolferList();
+  } catch (e) {
+    document.getElementById('golferList').innerHTML = `<div style="padding:16px;color:#faa;">Error loading field: ${e.message}</div>`;
+  }
+}
+function renderGolferList() {
+  const q = (document.getElementById('golferSearch').value || '').toLowerCase();
+  const drafted = new Set(STATE.picks.map(p => p.golferId));
+  document.getElementById('oddsSource').textContent =
+    STATE.oddsSource === 'datagolf' ? 'Sorted by DataGolf win probability'
+    : STATE.oddsSource === 'datagolf_empty' ? 'DataGolf key set but no data — using world ranking'
+    : 'Sorted by world ranking (no odds source configured)';
+  const list = document.getElementById('golferList');
+  list.innerHTML = '';
+  let shown = 0;
+  STATE.field.forEach((g, i) => {
+    if (q && !g.name.toLowerCase().includes(q)) return;
+    const isDrafted = drafted.has(g.id);
+    const row = document.createElement('div');
+    row.className = 'golfer-row' + (isDrafted ? ' drafted' : '');
+    row.innerHTML = `
+      <div class="golfer-rank">${i+1}</div>
+      <div><strong>${g.name}</strong> ${g.flag ? `<span class="golfer-wr">· ${g.flag}</span>`:''}</div>
+      <div class="golfer-wr">${g.rank ? 'WR #'+g.rank : ''}</div>
+      <div class="golfer-prob">${g.winProb != null ? (g.winProb * (g.winProb>1?1:100)).toFixed(1)+'%' : ''}</div>
+      <div>${!isDrafted ? `<button class="btn btn-primary btn-sm" data-gid="${g.id}" data-gname="${encodeURIComponent(g.name)}">Draft</button>` : '<span class="help">drafted</span>'}</div>
+    `;
+    list.appendChild(row);
+    shown++;
+  });
+  if (shown === 0) list.innerHTML = '<div style="padding:16px;color:var(--cream-dim);">No golfers match.</div>';
+  list.querySelectorAll('[data-gid]').forEach(btn => btn.onclick = async (e) => {
+    const gid = e.target.dataset.gid;
+    const gname = decodeURIComponent(e.target.dataset.gname);
+    await makePick(gid, gname);
+  });
+}
+
+async function makePick(gid, gname) {
+  const gpt = STATE.tournament.golfersPerTeam || 6;
+  const totalPicks = STATE.draftOrder.length * gpt;
+  if (STATE.picks.length >= totalPicks) { toast('Draft is complete', {error:true}); return; }
+  const pid = snakePlayerIdForPick(STATE.picks.length);
+  STATE.picks.push({ playerId: pid, golferId: gid, golferName: gname, pickNum: STATE.picks.length + 1 });
+  await saveTournament();
+  render();
+  renderGolferList();
+}
+
+document.getElementById('golferSearch').addEventListener('input', renderGolferList);
+document.getElementById('refreshFieldBtn').onclick = loadField;
+document.getElementById('undoPickBtn').onclick = async () => {
+  if (STATE.picks.length === 0) return;
+  STATE.picks.pop();
+  await saveTournament();
+  render();
+  renderGolferList();
+};
+document.getElementById('completeDraftBtn').onclick = async () => {
+  if (!STATE.tournament) return;
+  const gpt = STATE.tournament.golfersPerTeam || 6;
+  const expected = STATE.draftOrder.length * gpt;
+  if (STATE.picks.length < expected) {
+    if (!confirm(`Only ${STATE.picks.length}/${expected} picks made. Activate anyway?`)) return;
+  }
+  STATE.tournament.status = 'live';
+  STATE.tournament.teams = buildTeamsFromPicks();
+  await saveTournament();
+  render();
+  toast('🏁 Tournament activated');
+};
+
+/* ===================== ADVANCED ===================== */
+document.getElementById('saveDgKeyBtn').onclick = async () => {
+  const k = document.getElementById('dgKeyInput').value.trim();
+  await api('/admin/datagolf-key', { method: 'POST', body: JSON.stringify({ key: k }) });
+  toast('DataGolf key saved');
+  document.getElementById('dgKeyInput').value = '';
+  const dgR = await api('/admin/has-key');
+  document.getElementById('dgKeyStatus').textContent =
+    dgR.hasKey ? '✓ Key saved — win probabilities active' : '(No key — sorting by world ranking)';
+};
+
+/* ===================== BOOT ===================== */
+(async function init() {
+  const saved = localStorage.getItem(TOKEN_KEY);
+  if (saved) {
+    const r = await fetch(WORKER_URL + '/admin/login', {
+      method: 'POST', headers: {'content-type':'application/json'},
+      body: JSON.stringify({ password: saved })
+    });
+    if (r.ok) {
+      const j = await r.json();
+      if (j.ok) {
+        ADMIN_TOKEN = saved;
+        await enterApp();
+        await loadField();
+        return;
+      }
+    }
+    localStorage.removeItem(TOKEN_KEY);
+  }
+  // Check if admin initialized
+  const initCheck = await fetch(WORKER_URL + '/admin/login', {
+    method: 'POST', headers: {'content-type':'application/json'},
+    body: JSON.stringify({ password: '__probe__' })
+  });
+  // If 401, admin exists. If some other error (no admin set), show init message.
+  // We'll just show login screen either way and handle init inside tryLogin.
+  document.getElementById('gateView').classList.remove('hidden');
+  document.getElementById('initHelp').classList.remove('hidden');
+})();
+</script>
+</body>
+</html>

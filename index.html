@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>The Masters Pool 2026 🏆</title>
+<title>The Majors Pool 🏆</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
@@ -621,10 +621,13 @@
 <body>
 <div class="container">
   <header>
-    <h1>The Masters Pool</h1>
-    <div class="subtitle">Augusta National · 2026</div>
-    <div class="pot-banner">💰 $75 Pot · Lowest Total Wins</div>
-    <div style="margin-top:12px;"><a href="history.html" style="display:inline-block;padding:8px 18px;background:linear-gradient(135deg,#d4af37,#f9e076);color:#2a1810;border-radius:999px;text-decoration:none;font-weight:700;font-family:Georgia,serif;letter-spacing:0.5px;box-shadow:0 2px 8px rgba(0,0,0,0.3);">🏆 Trophy Case & History →</a></div>
+    <h1>The Majors Pool</h1>
+    <div class="subtitle">Loading tournament…</div>
+    <div class="pot-banner">💰 Pot · Lowest Total Wins</div>
+    <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <a href="history.html" style="display:inline-block;padding:8px 18px;background:linear-gradient(135deg,#d4af37,#f9e076);color:#2a1810;border-radius:999px;text-decoration:none;font-weight:700;font-family:Georgia,serif;letter-spacing:0.5px;box-shadow:0 2px 8px rgba(0,0,0,0.3);">🏆 Trophy Room</a>
+      <a href="draft.html" style="display:inline-block;padding:8px 18px;background:rgba(255,255,255,0.08);color:var(--cream);border:1px solid rgba(249,224,118,0.4);border-radius:999px;text-decoration:none;font-weight:700;font-family:Georgia,serif;letter-spacing:0.5px;">📋 Draft Room</a>
+    </div>
   </header>
   <div class="rules">
     <strong>The Rules:</strong> Each player drafted 6 golfers for $25. Lowest combined total strokes wins the $75 pot.
@@ -675,46 +678,20 @@
 
 <script>
 // ============ POOL DATA ============
-const TEAMS = [
-  {
-    name: "Tagan",
-    golfers: [
-      "Scottie Scheffler",
-      "Jon Rahm",
-      "Matt Fitzpatrick",
-      "Justin Rose",
-      "Tommy Fleetwood",
-      "Akshay Bhatia"
-    ]
-  },
-  {
-    name: "Jepic",
-    golfers: [
-      "Bryson DeChambeau",
-      "Cameron Young",
-      "Xander Schauffele",
-      "Patrick Reed",
-      "Jordan Spieth",
-      "Brooks Koepka"
-    ]
-  },
-  {
-    name: "Bigra",
-    golfers: [
-      "Rory McIlroy",
-      "Ludvig Aberg",
-      "Collin Morikawa",
-      "Viktor Hovland",
-      "Si Woo Kim",
-      "Min Woo Lee"
-    ]
-  }
-];
+// Tournament config — loaded dynamically from worker /config endpoint.
+let TEAMS = [];
+let TOURNAMENT_CFG = null;
+let ESPN_EVENT_ID = null;
 
-const ESPN_URL = "https://site.api.espn.com/apis/site/v2/sports/golf/leaderboard";
+const ESPN_URL_BASE = "https://site.api.espn.com/apis/site/v2/sports/golf/leaderboard";
+// ESPN_URL stays as a getter — uses config event id when available.
+function getEspnUrl() {
+  return ESPN_EVENT_ID ? `${ESPN_URL_BASE}/${ESPN_EVENT_ID}` : ESPN_URL_BASE;
+}
+const ESPN_URL = ESPN_URL_BASE; // legacy binding; code below uses getEspnUrl() where it matters
 
 // ============ CHART CONFIG ============
-const PAR = 72; // Augusta National
+let PAR = 72; // overridden from config
 // Approximate round end times (7:30pm ET Thu/Fri, 6:30pm ET Sat/Sun)
 const ROUND_END_TIMES_UTC = [
   '2026-04-09T23:30:00Z',
@@ -724,10 +701,10 @@ const ROUND_END_TIMES_UTC = [
 ];
 const SNAPSHOT_KEY = 'mp2026_snapshots_v1';
 const MAX_SNAPSHOTS = 600;
-const TEAM_COLORS = { Tagan: '#f9e076', Jepic: '#4ade80', Bigra: '#f87171' };
+let TEAM_COLORS = { Tagan: '#f9e076', Jepic: '#4ade80', Bigra: '#f87171' };
 
 // ============ NEW FEATURE CONFIG ============
-const MISSED_CUT_PENALTY_PER_WEEKEND_ROUND = 3; // +3 strokes for Sat and Sun if cut
+let MISSED_CUT_PENALTY_PER_WEEKEND_ROUND = 3; // overridden from config
 const WORKER_URL = "https://masters-pool-notifier.spindle-web.workers.dev";
 const AUGUSTA_LAT = 33.5031;
 const AUGUSTA_LON = -82.0237;
@@ -883,10 +860,96 @@ function getGolferData(competitor) {
 }
 
 // ============ RENDER ============
+async function loadTournamentConfig() {
+  try {
+    const r = await fetch(`${WORKER_URL}/config`);
+    if (!r.ok) return;
+    const j = await r.json();
+    const t = j.tournament;
+    if (!t) return;
+    TOURNAMENT_CFG = t;
+    ESPN_EVENT_ID = t.eventId || null;
+    if (t.par) PAR = Number(t.par);
+    if (t.cutPenalty != null) MISSED_CUT_PENALTY_PER_WEEKEND_ROUND = Number(t.cutPenalty);
+    if (Array.isArray(t.teams) && t.teams.length) {
+      TEAMS = t.teams.map(team => ({
+        name: team.name,
+        golfers: team.golfers || [],
+      }));
+      const players = j.players || [];
+      TEAM_COLORS = {};
+      for (const team of t.teams) {
+        const p = players.find(p => p.name === team.name || p.id === team.playerId);
+        TEAM_COLORS[team.name] = p?.color || team.color || '#888';
+      }
+    }
+    // Apply theme
+    applyTournamentTheme(t);
+    // Update header / title text
+    document.title = `${t.name || 'The Majors Pool'} 🏆`;
+    const h1 = document.querySelector('header h1');
+    if (h1) h1.textContent = t.name || 'The Majors Pool';
+    const subEl = document.querySelector('header .subtitle');
+    if (subEl) subEl.textContent = `${t.course || ''}${t.course ? ' · ' : ''}${t.name?.match(/\d{4}/) ? t.name.match(/\d{4}/)[0] : new Date().getFullYear()}`;
+    const potEl = document.querySelector('header .pot-banner');
+    if (potEl) potEl.textContent = `💰 $${t.pot || 0} Pot · Lowest Total Wins`;
+    // Update rules text
+    const rulesEl = document.querySelector('.rules');
+    if (rulesEl && t.golfersPerTeam) {
+      const per = Math.round((t.pot || 0) / Math.max(TEAMS.length, 1));
+      rulesEl.innerHTML = `
+        <strong>The Rules:</strong> Each player drafted ${t.golfersPerTeam} golfers for $${per}. Lowest combined total strokes wins the $${t.pot || 0} pot.
+        ${t.winnerBonus ? `<strong>Bonus:</strong> ${t.winnerBonus}` : ''}
+        <strong>Missed cut penalty:</strong> each cut golfer adds +${t.cutPenalty || 3} to their team's total for both weekend rounds.
+      `;
+    }
+  } catch (e) {
+    console.warn('config load failed', e);
+  }
+}
+
+function applyTournamentTheme(t) {
+  const theme = t?.theme || 'masters';
+  const themes = {
+    masters: { primary: '#006747', dark: '#003d2b', accent: '#f9e076', gold: '#d4a83a' },
+    pga:     { primary: '#193761', dark: '#0a1f38', accent: '#e8d9b5', gold: '#d4af37' },
+    usopen:  { primary: '#a01d3f', dark: '#5c0f22', accent: '#e8d9b5', gold: '#d4af37' },
+    open:    { primary: '#722f37', dark: '#3d1a1f', accent: '#d4af37', gold: '#f0c755' },
+  };
+  const th = themes[theme] || themes.masters;
+  document.documentElement.style.setProperty('--masters-green', th.primary);
+  document.documentElement.style.setProperty('--masters-dark', th.dark);
+  document.documentElement.style.setProperty('--masters-darker', th.dark);
+  document.documentElement.style.setProperty('--masters-yellow', th.accent);
+  document.documentElement.style.setProperty('--masters-gold', th.gold);
+  // Only apply the Augusta background for the Masters theme
+  if (theme !== 'masters') {
+    const header = document.querySelector('header');
+    if (header) {
+      header.style.background = `linear-gradient(180deg, ${th.dark} 0%, ${th.primary} 100%)`;
+    }
+  }
+}
+
 async function load() {
   const statusBar = document.getElementById("statusBar");
+  // Ensure config is loaded on first invocation
+  if (!TOURNAMENT_CFG) await loadTournamentConfig();
+  // If no active tournament OR tournament not yet live, show a different message
+  if (!TOURNAMENT_CFG || TOURNAMENT_CFG.status === 'setup') {
+    statusBar.innerHTML = `
+      <div style="text-align:center;padding:18px;">
+        <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--masters-yellow);margin-bottom:8px;">No active tournament</div>
+        <div style="font-size:14px;color:var(--cream);opacity:.8;">Head to the <a href="draft.html" style="color:var(--masters-yellow);">Draft Room</a> to set one up.</div>
+      </div>`;
+    // Hide sections that assume an active tournament
+    document.querySelectorAll('#bonusBanner, #cutLineBox, #tourneyBoard, #weatherStrip').forEach(el => el && (el.style.display = 'none'));
+    return;
+  }
+  // Show sections again if they were hidden
+  document.querySelectorAll('#bonusBanner, #cutLineBox, #tourneyBoard, #weatherStrip').forEach(el => el && (el.style.display = ''));
   try {
-    const resp = await fetch(ESPN_URL, { cache: "no-store" });
+    const resp = await fetch(getEspnUrl(), { cache: "no-store" });
     if (!resp.ok) throw new Error("HTTP " + resp.status);
     const data = await resp.json();
 
