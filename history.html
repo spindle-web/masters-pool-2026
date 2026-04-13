@@ -70,32 +70,65 @@
     letter-spacing: -0.01em;
   }
 
-  /* ============ NAVIGATION ============ */
+  /* ============ STICKY NAV (shared across all pages) ============ */
   nav.top {
+    position: sticky;
+    top: 0;
+    z-index: 100;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 28px 48px;
-    position: relative;
-    z-index: 10;
+    gap: 16px;
+    padding: 12px 32px;
+    background: rgba(6, 16, 11, 0.82);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border-bottom: 1px solid rgba(249, 224, 118, 0.18);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+  }
+  nav.top .brand {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 20px;
+    color: var(--theme-accent);
+    letter-spacing: 0;
+    text-transform: none;
+    white-space: nowrap;
+  }
+  nav.top .nav-links {
+    display: flex;
+    gap: 10px;
+    align-items: center;
   }
   nav.top a {
     color: var(--cream-dim);
     text-decoration: none;
-    font-size: 13px;
-    letter-spacing: 2px;
+    font-size: 12px;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
-    font-weight: 500;
-    transition: color 0.3s;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(249, 224, 118, 0.22);
+    background: rgba(255,255,255,0.03);
+    transition: all 0.25s ease;
   }
-  nav.top a:hover { color: var(--theme-accent); }
-  nav.top .brand {
-    font-family: 'Playfair Display', serif;
-    font-style: italic;
-    font-size: 22px;
+  nav.top a:hover {
     color: var(--theme-accent);
-    letter-spacing: 0;
-    text-transform: none;
+    border-color: var(--theme-accent);
+    background: rgba(249, 224, 118, 0.08);
+  }
+  nav.top a.active {
+    background: linear-gradient(135deg, var(--masters-gold), var(--masters-yellow));
+    color: var(--wood-dark);
+    border-color: var(--masters-yellow);
+    box-shadow: 0 2px 10px rgba(249, 224, 118, 0.3);
+  }
+  @media (max-width: 720px) {
+    nav.top { padding: 10px 16px; gap: 8px; }
+    nav.top .brand { font-size: 16px; }
+    nav.top a { font-size: 10px; padding: 6px 10px; letter-spacing: 1px; }
+    nav.top .nav-links { gap: 6px; }
   }
 
   /* ============ HERO ============ */
@@ -1036,7 +1069,6 @@
 
   /* ============ RESPONSIVE ============ */
   @media (max-width: 960px) {
-    nav.top { padding: 20px 24px; }
     .hero { padding: 24px 24px 60px; }
     .shelf-wrap, .season, .players, .featured, .awards, .team-stats {
       padding: 0 24px;
@@ -1061,9 +1093,12 @@
 <body>
 <main>
   <nav class="top">
-    <a href="index.html">← Live Pool</a>
     <span class="brand">The Majors Pool</span>
-    <a href="#trophy-room">Trophy Room</a>
+    <div class="nav-links">
+      <a href="index.html">Live</a>
+      <a href="history.html" class="active">Trophy Room</a>
+      <a href="draft.html">Draft Room</a>
+    </div>
   </nav>
 
   <!-- ============ HERO ============ -->
@@ -1079,180 +1114,356 @@
       <!-- Green Jacket — Masters 2026 -->
       <div class="trophy filled" data-theme="masters">
         <div class="trophy-art">
-          <!-- Green Jacket SVG -->
-          <svg viewBox="0 0 220 260" xmlns="http://www.w3.org/2000/svg">
+          <!-- Refined Green Jacket SVG -->
+          <svg viewBox="0 0 240 280" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="jacketGrad" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0" stop-color="#145c3e"/>
-                <stop offset="1" stop-color="#083020"/>
+              <linearGradient id="jacketBody" x1="0.2" x2="0.8" y1="0" y2="1">
+                <stop offset="0" stop-color="#1e6b48"/>
+                <stop offset="0.45" stop-color="#0f4d31"/>
+                <stop offset="1" stop-color="#052a1a"/>
               </linearGradient>
-              <linearGradient id="jacketShine" x1="0" x2="1" y1="0" y2="0">
+              <linearGradient id="jacketHighlight" x1="0" x2="1" y1="0" y2="0">
                 <stop offset="0" stop-color="rgba(255,255,255,0)"/>
-                <stop offset="0.5" stop-color="rgba(255,255,255,0.15)"/>
+                <stop offset="0.3" stop-color="rgba(255,255,255,0.18)"/>
+                <stop offset="0.5" stop-color="rgba(255,255,255,0.25)"/>
+                <stop offset="0.7" stop-color="rgba(255,255,255,0.1)"/>
                 <stop offset="1" stop-color="rgba(255,255,255,0)"/>
               </linearGradient>
+              <linearGradient id="lapelGrad" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" stop-color="#2a7a57"/>
+                <stop offset="1" stop-color="#0a3a24"/>
+              </linearGradient>
+              <linearGradient id="hangerMetal" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" stop-color="#e8ecf0"/>
+                <stop offset="0.5" stop-color="#9aa0a8"/>
+                <stop offset="1" stop-color="#6a7078"/>
+              </linearGradient>
+              <radialGradient id="buttonShine" cx="0.35" cy="0.3" r="0.6">
+                <stop offset="0" stop-color="#fde889"/>
+                <stop offset="0.5" stop-color="#d4af37"/>
+                <stop offset="1" stop-color="#8a6d1f"/>
+              </radialGradient>
+              <filter id="jacketShadow" x="-20%" y="-10%" width="140%" height="120%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="1.2"/>
+              </filter>
             </defs>
-            <!-- Hanger -->
-            <path d="M 110 5 Q 110 -5 95 5 L 95 18" stroke="#c0c5cc" stroke-width="2.5" fill="none"/>
-            <path d="M 110 5 Q 110 -5 125 5 L 125 18" stroke="#c0c5cc" stroke-width="2.5" fill="none"/>
-            <!-- Jacket body -->
-            <path d="M 60 40 L 30 70 L 45 95 L 45 250 L 105 255 L 115 255 L 175 250 L 175 95 L 190 70 L 160 40 L 130 50 L 110 60 L 90 50 Z"
-                  fill="url(#jacketGrad)" stroke="#052515" stroke-width="1.5"/>
-            <!-- Lapel left -->
-            <path d="M 90 50 L 85 130 L 110 60 Z" fill="#0a2d1e" opacity="0.6"/>
-            <!-- Lapel right -->
-            <path d="M 130 50 L 135 130 L 110 60 Z" fill="#1a7049" opacity="0.5"/>
+
+            <!-- Hanger hook -->
+            <path d="M 120 10 Q 120 0 115 -2 Q 110 -4 110 2" stroke="url(#hangerMetal)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <!-- Hanger bar -->
+            <path d="M 75 26 Q 120 8 165 26" stroke="url(#hangerMetal)" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+            <!-- Jacket shoulders (outer silhouette) -->
+            <path d="M 75 28 Q 55 30 42 44 Q 32 58 38 78
+                     L 42 98
+                     L 42 260 Q 42 268 50 270
+                     L 108 274 Q 120 275 132 274
+                     L 190 270 Q 198 268 198 260
+                     L 198 98
+                     L 202 78 Q 208 58 198 44 Q 185 30 165 28
+                     Q 150 34 138 42
+                     L 120 58
+                     L 102 42 Q 90 34 75 28 Z"
+                  fill="url(#jacketBody)" stroke="#031810" stroke-width="1.2" stroke-linejoin="round"/>
+
+            <!-- Right panel (overlapping front) - creates the cross-over feel -->
+            <path d="M 120 58 L 138 42 Q 150 34 165 28 Q 185 30 198 44 Q 208 58 202 78
+                     L 198 98 L 198 260 Q 198 268 190 270 L 132 274 Q 124 274 120 272
+                     L 120 58 Z"
+                  fill="url(#jacketBody)" opacity="0.35"/>
+
+            <!-- Left lapel -->
+            <path d="M 102 42 L 120 58 L 110 150 L 86 130 Z"
+                  fill="url(#lapelGrad)" stroke="#031810" stroke-width="0.8"/>
+            <!-- Right lapel -->
+            <path d="M 138 42 L 120 58 L 130 150 L 154 130 Z"
+                  fill="url(#lapelGrad)" stroke="#031810" stroke-width="0.8"/>
+
+            <!-- Collar (curving around back) -->
+            <path d="M 102 42 Q 120 36 138 42 Q 128 46 120 52 Q 112 46 102 42 Z"
+                  fill="#0a3a24" stroke="#031810" stroke-width="0.8"/>
+
+            <!-- Lapel crease highlights -->
+            <path d="M 102 42 L 108 120" stroke="#2f8a62" stroke-width="0.8" opacity="0.55" fill="none"/>
+            <path d="M 138 42 L 132 120" stroke="#2f8a62" stroke-width="0.8" opacity="0.55" fill="none"/>
+
             <!-- Center seam -->
-            <line x1="110" y1="60" x2="110" y2="255" stroke="#052515" stroke-width="1" opacity="0.4"/>
-            <!-- Buttons (Masters tournament logo-ish gold buttons) -->
-            <circle cx="110" cy="110" r="3.5" fill="#d4af37" stroke="#8a6d1f" stroke-width="0.5"/>
-            <circle cx="110" cy="140" r="3.5" fill="#d4af37" stroke="#8a6d1f" stroke-width="0.5"/>
-            <circle cx="110" cy="170" r="3.5" fill="#d4af37" stroke="#8a6d1f" stroke-width="0.5"/>
-            <!-- Chest pocket -->
-            <rect x="122" y="100" width="28" height="22" fill="none" stroke="#052515" stroke-width="1" opacity="0.5"/>
-            <!-- Masters logo on pocket (subtle) -->
-            <text x="136" y="115" font-family="Playfair Display" font-size="8" fill="#d4af37" text-anchor="middle" opacity="0.8" font-style="italic">M</text>
-            <!-- Side pockets -->
-            <path d="M 55 180 L 90 175 L 90 200 L 55 205 Z" fill="none" stroke="#052515" stroke-width="1" opacity="0.4"/>
-            <path d="M 165 180 L 130 175 L 130 200 L 165 205 Z" fill="none" stroke="#052515" stroke-width="1" opacity="0.4"/>
-            <!-- Shine -->
-            <rect x="60" y="60" width="100" height="190" fill="url(#jacketShine)" opacity="0.3"/>
-            <!-- Shoulders highlight -->
-            <path d="M 60 40 L 30 70 L 45 85" fill="none" stroke="#1a7049" stroke-width="2" opacity="0.6"/>
-            <path d="M 160 40 L 190 70 L 175 85" fill="none" stroke="#1a7049" stroke-width="2" opacity="0.6"/>
+            <line x1="120" y1="58" x2="120" y2="272" stroke="#031810" stroke-width="0.8" opacity="0.55"/>
+
+            <!-- Masters crest on breast (subtle gold emblem) -->
+            <g transform="translate(148 108)">
+              <ellipse cx="0" cy="0" rx="11" ry="12" fill="#0a3a24" stroke="#d4af37" stroke-width="0.8"/>
+              <text x="0" y="3" font-family="Playfair Display, serif" font-size="10" fill="#d4af37" text-anchor="middle" font-style="italic" font-weight="700">M</text>
+            </g>
+
+            <!-- Three gold buttons down center -->
+            <circle cx="120" cy="132" r="4" fill="url(#buttonShine)" stroke="#6a530f" stroke-width="0.6"/>
+            <circle cx="120" cy="162" r="4" fill="url(#buttonShine)" stroke="#6a530f" stroke-width="0.6"/>
+            <circle cx="120" cy="192" r="4" fill="url(#buttonShine)" stroke="#6a530f" stroke-width="0.6"/>
+            <!-- Button highlights -->
+            <circle cx="118.5" cy="130.5" r="1.2" fill="rgba(255,255,255,0.8)"/>
+            <circle cx="118.5" cy="160.5" r="1.2" fill="rgba(255,255,255,0.8)"/>
+            <circle cx="118.5" cy="190.5" r="1.2" fill="rgba(255,255,255,0.8)"/>
+
+            <!-- Side flap pockets -->
+            <path d="M 52 210 L 96 204 L 96 228 L 52 234 Z" fill="none" stroke="#031810" stroke-width="0.8" opacity="0.65"/>
+            <path d="M 52 210 L 96 204" stroke="#2f8a62" stroke-width="0.6" opacity="0.5"/>
+            <path d="M 188 210 L 144 204 L 144 228 L 188 234 Z" fill="none" stroke="#031810" stroke-width="0.8" opacity="0.65"/>
+            <path d="M 188 210 L 144 204" stroke="#2f8a62" stroke-width="0.6" opacity="0.5"/>
+
+            <!-- Breast pocket stitching -->
+            <rect x="138" y="96" width="24" height="3" fill="none" stroke="#031810" stroke-width="0.5" opacity="0.45"/>
+
+            <!-- Sleeves (hanging down past body edge) -->
+            <path d="M 42 98 Q 32 160 36 240 Q 38 256 46 258 L 52 258 Q 56 258 56 252 Q 54 180 58 102 Z"
+                  fill="url(#jacketBody)" stroke="#031810" stroke-width="1" opacity="0.92"/>
+            <path d="M 198 98 Q 208 160 204 240 Q 202 256 194 258 L 188 258 Q 184 258 184 252 Q 186 180 182 102 Z"
+                  fill="url(#jacketBody)" stroke="#031810" stroke-width="1" opacity="0.92"/>
+
+            <!-- Fabric highlight sweep (gives sheen) -->
+            <path d="M 50 60 Q 120 80 195 60 L 195 270 Q 120 280 50 270 Z"
+                  fill="url(#jacketHighlight)" opacity="0.25"/>
+
+            <!-- Shoulder highlights -->
+            <path d="M 52 38 Q 42 50 40 72" stroke="#3fa075" stroke-width="1.4" fill="none" opacity="0.5"/>
+            <path d="M 188 38 Q 198 50 200 72" stroke="#3fa075" stroke-width="1.4" fill="none" opacity="0.5"/>
+
+            <!-- Bottom hem shadow -->
+            <path d="M 42 260 Q 120 272 198 260" stroke="rgba(0,0,0,0.4)" stroke-width="1.4" fill="none"/>
           </svg>
         </div>
         <div class="nameplate">
           <div class="tourney">The Masters</div>
           <div class="winner">Jepic</div>
-          <div class="year">— 2026 —</div>
+          <div class="year">— April 9–12, 2026 —</div>
         </div>
       </div>
 
       <!-- Wanamaker Trophy — PGA Championship -->
       <div class="trophy unfilled" data-theme="pga">
         <div class="trophy-art">
-          <svg viewBox="0 0 220 260" xmlns="http://www.w3.org/2000/svg">
+          <svg viewBox="0 0 240 280" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="silverGradP" x1="0" x2="1" y1="0" y2="0">
-                <stop offset="0" stop-color="#8a8f96"/>
-                <stop offset="0.4" stop-color="#e8ecf0"/>
-                <stop offset="0.6" stop-color="#e8ecf0"/>
-                <stop offset="1" stop-color="#8a8f96"/>
+              <linearGradient id="silverBodyP" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0" stop-color="#6a6f76"/>
+                <stop offset="0.25" stop-color="#c8ccd1"/>
+                <stop offset="0.5" stop-color="#f2f4f7"/>
+                <stop offset="0.75" stop-color="#c8ccd1"/>
+                <stop offset="1" stop-color="#6a6f76"/>
               </linearGradient>
+              <linearGradient id="silverRimP" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" stop-color="#e8ecf0"/>
+                <stop offset="1" stop-color="#7a7f86"/>
+              </linearGradient>
+              <radialGradient id="finialP" cx="0.35" cy="0.35" r="0.7">
+                <stop offset="0" stop-color="#ffffff"/>
+                <stop offset="0.5" stop-color="#d8dce0"/>
+                <stop offset="1" stop-color="#6a6f76"/>
+              </radialGradient>
             </defs>
-            <!-- Wide bowl cup -->
-            <path d="M 40 60 Q 40 160 110 180 Q 180 160 180 60 Z" fill="url(#silverGradP)" stroke="#5a5f66" stroke-width="1.5"/>
-            <!-- Lid/top rim -->
-            <rect x="38" y="52" width="144" height="14" rx="3" fill="url(#silverGradP)" stroke="#5a5f66" stroke-width="1"/>
-            <!-- Handles (left) -->
-            <path d="M 40 70 Q 10 80 10 110 Q 10 140 40 140" fill="none" stroke="url(#silverGradP)" stroke-width="6" stroke-linecap="round"/>
-            <!-- Handles (right) -->
-            <path d="M 180 70 Q 210 80 210 110 Q 210 140 180 140" fill="none" stroke="url(#silverGradP)" stroke-width="6" stroke-linecap="round"/>
+
+            <!-- Finial (ornate top) -->
+            <circle cx="120" cy="22" r="7" fill="url(#finialP)" stroke="#4a4f56" stroke-width="0.8"/>
+            <rect x="117" y="28" width="6" height="8" fill="url(#silverRimP)"/>
+
+            <!-- Domed lid -->
+            <path d="M 75 48 Q 120 28 165 48 L 165 56 L 75 56 Z" fill="url(#silverBodyP)" stroke="#4a4f56" stroke-width="1"/>
+            <ellipse cx="120" cy="48" rx="45" ry="6" fill="#4a4f56" opacity="0.3"/>
+
+            <!-- Top rim ring -->
+            <rect x="50" y="56" width="140" height="10" rx="2" fill="url(#silverRimP)" stroke="#4a4f56" stroke-width="1"/>
+
+            <!-- Massive bowl body -->
+            <path d="M 50 66 Q 48 140 80 180 Q 100 194 120 196 Q 140 194 160 180 Q 192 140 190 66 Z"
+                  fill="url(#silverBodyP)" stroke="#4a4f56" stroke-width="1.4"/>
+
+            <!-- Left ornate handle -->
+            <path d="M 50 78 Q 18 82 14 118 Q 14 150 46 156" fill="none" stroke="url(#silverBodyP)" stroke-width="8" stroke-linecap="round"/>
+            <path d="M 50 78 Q 18 82 14 118 Q 14 150 46 156" fill="none" stroke="#4a4f56" stroke-width="1.2" opacity="0.4"/>
+            <!-- Right ornate handle -->
+            <path d="M 190 78 Q 222 82 226 118 Q 226 150 194 156" fill="none" stroke="url(#silverBodyP)" stroke-width="8" stroke-linecap="round"/>
+            <path d="M 190 78 Q 222 82 226 118 Q 226 150 194 156" fill="none" stroke="#4a4f56" stroke-width="1.2" opacity="0.4"/>
+
             <!-- Engraving band -->
-            <rect x="55" y="100" width="110" height="28" fill="rgba(0,0,0,0.15)"/>
-            <text x="110" y="120" font-family="Playfair Display" font-size="11" fill="#4a4f56" text-anchor="middle" font-style="italic">PGA</text>
-            <!-- Base stem -->
-            <rect x="90" y="180" width="40" height="20" fill="url(#silverGradP)" stroke="#5a5f66" stroke-width="1"/>
-            <!-- Base -->
-            <path d="M 60 200 L 160 200 L 150 235 L 70 235 Z" fill="#3e2414" stroke="#1a0f08" stroke-width="1"/>
-            <!-- Nameplate on base -->
-            <rect x="78" y="210" width="64" height="12" fill="#d4af37" opacity="0.4"/>
-            <!-- Cup top -->
-            <ellipse cx="110" cy="52" rx="72" ry="5" fill="#5a5f66"/>
-            <!-- Finial -->
-            <circle cx="110" cy="45" r="6" fill="url(#silverGradP)" stroke="#5a5f66"/>
+            <rect x="58" y="96" width="124" height="34" fill="rgba(0,0,0,0.18)"/>
+            <rect x="58" y="96" width="124" height="1.5" fill="#4a4f56" opacity="0.6"/>
+            <rect x="58" y="128.5" width="124" height="1.5" fill="#4a4f56" opacity="0.6"/>
+            <text x="120" y="114" font-family="Playfair Display" font-size="11" fill="#4a4f56" text-anchor="middle" font-weight="700" letter-spacing="2">WANAMAKER</text>
+            <text x="120" y="124" font-family="Playfair Display" font-size="6" fill="#4a4f56" text-anchor="middle" letter-spacing="1.5">— PGA CHAMPIONSHIP —</text>
+
+            <!-- Decorative bands -->
+            <ellipse cx="120" cy="145" rx="60" ry="4" fill="#4a4f56" opacity="0.25"/>
+            <ellipse cx="120" cy="155" rx="55" ry="3" fill="#4a4f56" opacity="0.2"/>
+
+            <!-- Highlight sheen on bowl -->
+            <ellipse cx="88" cy="110" rx="12" ry="40" fill="rgba(255,255,255,0.35)" opacity="0.6"/>
+
+            <!-- Stem -->
+            <path d="M 100 196 L 140 196 L 135 216 L 105 216 Z" fill="url(#silverBodyP)" stroke="#4a4f56" stroke-width="1"/>
+            <ellipse cx="120" cy="216" rx="18" ry="3" fill="#4a4f56"/>
+
+            <!-- Wood base (plinth) -->
+            <path d="M 70 216 L 170 216 L 165 248 L 75 248 Z" fill="#3e2414" stroke="#1a0f08" stroke-width="1"/>
+            <rect x="72" y="216" width="96" height="3" fill="#d4af37" opacity="0.4"/>
+            <!-- Gold nameplate -->
+            <rect x="84" y="226" width="72" height="14" fill="#d4af37" opacity="0.5" stroke="#8a6d1f" stroke-width="0.5"/>
+            <text x="120" y="236" font-family="Playfair Display" font-size="6" fill="#4a2c0f" text-anchor="middle" letter-spacing="1.5">2026</text>
           </svg>
         </div>
         <div class="nameplate">
           <div class="tourney">PGA Championship</div>
           <div class="winner">— to be won —</div>
-          <div class="year">May 2026</div>
+          <div class="year">May 14–17, 2026</div>
         </div>
       </div>
 
       <!-- US Open Trophy -->
       <div class="trophy unfilled" data-theme="usopen">
         <div class="trophy-art">
-          <svg viewBox="0 0 220 260" xmlns="http://www.w3.org/2000/svg">
+          <svg viewBox="0 0 240 280" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="silverGradU" x1="0" x2="1" y1="0" y2="0">
-                <stop offset="0" stop-color="#7a7f86"/>
+              <linearGradient id="silverBodyU" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0" stop-color="#5e636a"/>
+                <stop offset="0.25" stop-color="#c0c5cc"/>
+                <stop offset="0.5" stop-color="#f2f4f7"/>
+                <stop offset="0.75" stop-color="#c0c5cc"/>
+                <stop offset="1" stop-color="#5e636a"/>
+              </linearGradient>
+              <linearGradient id="silverHandleU" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0" stop-color="#8a8f96"/>
                 <stop offset="0.5" stop-color="#e8ecf0"/>
-                <stop offset="1" stop-color="#7a7f86"/>
+                <stop offset="1" stop-color="#8a8f96"/>
               </linearGradient>
             </defs>
-            <!-- Two-handled cup (taller) -->
-            <path d="M 60 50 L 60 160 Q 60 175 75 180 L 145 180 Q 160 175 160 160 L 160 50 Z"
-                  fill="url(#silverGradU)" stroke="#4a4f56" stroke-width="1.5"/>
-            <!-- Rim -->
-            <ellipse cx="110" cy="50" rx="50" ry="6" fill="#4a4f56"/>
-            <ellipse cx="110" cy="50" rx="48" ry="4" fill="#e8ecf0"/>
-            <!-- Left handle -->
-            <path d="M 60 60 Q 30 70 30 105 Q 30 140 60 150" fill="none" stroke="url(#silverGradU)" stroke-width="5" stroke-linecap="round"/>
-            <!-- Right handle -->
-            <path d="M 160 60 Q 190 70 190 105 Q 190 140 160 150" fill="none" stroke="url(#silverGradU)" stroke-width="5" stroke-linecap="round"/>
-            <!-- Banding -->
-            <rect x="60" y="75" width="100" height="4" fill="#4a4f56" opacity="0.4"/>
-            <rect x="60" y="145" width="100" height="4" fill="#4a4f56" opacity="0.4"/>
-            <!-- Engraving -->
-            <text x="110" y="115" font-family="Playfair Display" font-size="10" fill="#4a4f56" text-anchor="middle" font-style="italic">U.S. OPEN</text>
+
+            <!-- Finial -->
+            <circle cx="120" cy="28" r="5" fill="url(#silverBodyU)" stroke="#4a4f56"/>
+            <rect x="118" y="32" width="4" height="6" fill="url(#silverBodyU)"/>
+
+            <!-- Domed lid -->
+            <path d="M 75 52 Q 120 32 165 52 L 165 58 L 75 58 Z" fill="url(#silverBodyU)" stroke="#4a4f56" stroke-width="1"/>
+
+            <!-- Top rim (thick) -->
+            <rect x="65" y="56" width="110" height="10" rx="1" fill="url(#silverBodyU)" stroke="#4a4f56" stroke-width="1"/>
+            <ellipse cx="120" cy="58" rx="53" ry="3" fill="#2a2f36" opacity="0.5"/>
+
+            <!-- Tall cylindrical cup body -->
+            <path d="M 70 66 L 70 180 Q 70 194 84 198 L 156 198 Q 170 194 170 180 L 170 66 Z"
+                  fill="url(#silverBodyU)" stroke="#4a4f56" stroke-width="1.4"/>
+
+            <!-- Left twin-arch handle -->
+            <path d="M 70 74 Q 36 80 30 118 Q 30 154 66 162" fill="none" stroke="url(#silverHandleU)" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="30" cy="118" r="4" fill="url(#silverHandleU)" stroke="#4a4f56" stroke-width="0.8"/>
+            <!-- Right twin-arch handle -->
+            <path d="M 170 74 Q 204 80 210 118 Q 210 154 174 162" fill="none" stroke="url(#silverHandleU)" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="210" cy="118" r="4" fill="url(#silverHandleU)" stroke="#4a4f56" stroke-width="0.8"/>
+
+            <!-- Decorative bands around body -->
+            <rect x="70" y="82" width="100" height="2" fill="#4a4f56" opacity="0.4"/>
+            <rect x="70" y="86" width="100" height="1" fill="#4a4f56" opacity="0.3"/>
+            <rect x="70" y="160" width="100" height="2" fill="#4a4f56" opacity="0.4"/>
+            <rect x="70" y="164" width="100" height="1" fill="#4a4f56" opacity="0.3"/>
+
+            <!-- Engraving panel -->
+            <rect x="74" y="108" width="92" height="42" fill="rgba(0,0,0,0.2)"/>
+            <text x="120" y="126" font-family="Playfair Display" font-size="12" fill="#4a4f56" text-anchor="middle" font-weight="700" letter-spacing="2">U.S. OPEN</text>
+            <text x="120" y="138" font-family="Playfair Display" font-size="6" fill="#4a4f56" text-anchor="middle" letter-spacing="1.5" font-style="italic">CHAMPIONSHIP</text>
+            <text x="120" y="147" font-family="Playfair Display" font-size="5" fill="#4a4f56" text-anchor="middle" letter-spacing="1">USGA</text>
+
+            <!-- Sheen highlight -->
+            <ellipse cx="88" cy="120" rx="8" ry="45" fill="rgba(255,255,255,0.4)" opacity="0.55"/>
+
             <!-- Stem -->
-            <path d="M 85 180 L 135 180 L 130 200 L 90 200 Z" fill="url(#silverGradU)" stroke="#4a4f56" stroke-width="1"/>
-            <!-- Base -->
-            <path d="M 55 200 L 165 200 L 155 235 L 65 235 Z" fill="#3e2414" stroke="#1a0f08"/>
-            <rect x="75" y="212" width="70" height="10" fill="#d4af37" opacity="0.35"/>
+            <path d="M 98 198 L 142 198 L 138 218 L 102 218 Z" fill="url(#silverBodyU)" stroke="#4a4f56" stroke-width="1"/>
+            <ellipse cx="120" cy="218" rx="22" ry="3" fill="#4a4f56"/>
+
+            <!-- Base plinth -->
+            <path d="M 64 218 L 176 218 L 170 252 L 70 252 Z" fill="#3e2414" stroke="#1a0f08" stroke-width="1"/>
+            <rect x="66" y="218" width="108" height="3" fill="#c0c5cc" opacity="0.5"/>
+            <rect x="82" y="228" width="76" height="14" fill="#d4af37" opacity="0.5" stroke="#8a6d1f" stroke-width="0.5"/>
+            <text x="120" y="238" font-family="Playfair Display" font-size="6" fill="#4a2c0f" text-anchor="middle" letter-spacing="1.5">2026</text>
           </svg>
         </div>
         <div class="nameplate">
           <div class="tourney">U.S. Open</div>
           <div class="winner">— to be won —</div>
-          <div class="year">June 2026</div>
+          <div class="year">June 18–21, 2026</div>
         </div>
       </div>
 
       <!-- Claret Jug — The Open -->
       <div class="trophy unfilled" data-theme="open">
         <div class="trophy-art">
-          <svg viewBox="0 0 220 260" xmlns="http://www.w3.org/2000/svg">
+          <svg viewBox="0 0 240 280" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="silverGradO" x1="0" x2="1" y1="0" y2="0">
-                <stop offset="0" stop-color="#7a7f86"/>
-                <stop offset="0.5" stop-color="#f0f3f7"/>
-                <stop offset="1" stop-color="#7a7f86"/>
+              <linearGradient id="silverBodyO" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0" stop-color="#5a5f66"/>
+                <stop offset="0.25" stop-color="#b8bdc4"/>
+                <stop offset="0.5" stop-color="#f4f6f9"/>
+                <stop offset="0.75" stop-color="#b8bdc4"/>
+                <stop offset="1" stop-color="#5a5f66"/>
               </linearGradient>
+              <radialGradient id="bulbShine" cx="0.3" cy="0.3" r="0.5">
+                <stop offset="0" stop-color="rgba(255,255,255,0.7)"/>
+                <stop offset="1" stop-color="rgba(255,255,255,0)"/>
+              </radialGradient>
             </defs>
-            <!-- Finial -->
-            <ellipse cx="110" cy="35" rx="8" ry="4" fill="url(#silverGradO)"/>
-            <path d="M 110 25 L 110 38" stroke="#4a4f56" stroke-width="2"/>
-            <!-- Neck -->
-            <path d="M 92 38 L 95 75 L 125 75 L 128 38 Z" fill="url(#silverGradO)" stroke="#4a4f56" stroke-width="1"/>
-            <!-- Spout -->
-            <path d="M 125 42 Q 140 45 142 55 L 130 60 Q 128 52 120 50" fill="url(#silverGradO)" stroke="#4a4f56"/>
-            <!-- Body (bulbous) -->
-            <ellipse cx="110" cy="130" rx="60" ry="55" fill="url(#silverGradO)" stroke="#4a4f56" stroke-width="1.5"/>
-            <!-- Handle -->
-            <path d="M 50 100 Q 25 110 25 140 Q 25 170 50 170" fill="none" stroke="url(#silverGradO)" stroke-width="7" stroke-linecap="round"/>
-            <!-- Decorative band -->
-            <ellipse cx="110" cy="130" rx="50" ry="6" fill="#4a4f56" opacity="0.15"/>
-            <ellipse cx="110" cy="110" rx="55" ry="4" fill="#4a4f56" opacity="0.2"/>
-            <!-- Engraving/highlights -->
-            <path d="M 75 115 Q 110 108 145 115" fill="none" stroke="#4a4f56" stroke-width="0.5" opacity="0.5"/>
-            <text x="110" y="135" font-family="Playfair Display" font-size="9" fill="#4a4f56" text-anchor="middle" font-style="italic">CHAMPION GOLFER</text>
-            <text x="110" y="147" font-family="Playfair Display" font-size="7" fill="#4a4f56" text-anchor="middle" opacity="0.7">OF THE YEAR</text>
-            <!-- Stem -->
-            <path d="M 95 185 L 125 185 L 125 200 L 95 200 Z" fill="url(#silverGradO)" stroke="#4a4f56"/>
-            <!-- Base -->
-            <path d="M 70 200 L 150 200 L 145 235 L 75 235 Z" fill="#3e2414" stroke="#1a0f08"/>
-            <rect x="85" y="210" width="50" height="12" fill="#d4af37" opacity="0.4"/>
+
+            <!-- Finial ball with spike -->
+            <circle cx="120" cy="26" r="5" fill="url(#silverBodyO)" stroke="#4a4f56" stroke-width="0.8"/>
+            <path d="M 120 18 L 120 28" stroke="#4a4f56" stroke-width="1.5"/>
+            <ellipse cx="120" cy="22" rx="1.5" ry="1" fill="#e8ecf0"/>
+
+            <!-- Narrow neck -->
+            <path d="M 100 36 Q 100 55 102 72 L 138 72 Q 140 55 140 36 Q 130 34 120 34 Q 110 34 100 36 Z"
+                  fill="url(#silverBodyO)" stroke="#4a4f56" stroke-width="1"/>
+            <ellipse cx="120" cy="36" rx="20" ry="3" fill="#4a4f56" opacity="0.35"/>
+
+            <!-- Spout (pouring lip) -->
+            <path d="M 140 42 Q 158 46 162 60 Q 163 68 158 72 L 146 66 Q 148 58 142 54 Q 140 50 140 48 Z"
+                  fill="url(#silverBodyO)" stroke="#4a4f56" stroke-width="1"/>
+            <!-- Spout shadow -->
+            <path d="M 146 66 Q 148 58 142 54" fill="none" stroke="#4a4f56" stroke-width="0.8" opacity="0.6"/>
+
+            <!-- Decorative collar -->
+            <rect x="96" y="72" width="48" height="6" rx="1" fill="url(#silverBodyO)" stroke="#4a4f56" stroke-width="0.8"/>
+
+            <!-- Bulbous body -->
+            <ellipse cx="120" cy="140" rx="66" ry="60" fill="url(#silverBodyO)" stroke="#4a4f56" stroke-width="1.4"/>
+
+            <!-- Handle (ornate curved) -->
+            <path d="M 56 104 Q 22 112 22 144 Q 22 176 54 184" fill="none" stroke="url(#silverBodyO)" stroke-width="8" stroke-linecap="round"/>
+            <path d="M 56 104 Q 22 112 22 144 Q 22 176 54 184" fill="none" stroke="#4a4f56" stroke-width="1.2" opacity="0.4"/>
+
+            <!-- Decorative bands around widest part -->
+            <ellipse cx="120" cy="108" rx="62" ry="5" fill="#4a4f56" opacity="0.22"/>
+            <ellipse cx="120" cy="172" rx="62" ry="5" fill="#4a4f56" opacity="0.22"/>
+
+            <!-- Engraving (Champion Golfer of the Year) -->
+            <text x="120" y="138" font-family="Playfair Display" font-size="8" fill="#4a4f56" text-anchor="middle" font-style="italic" letter-spacing="1" font-weight="600">CHAMPION GOLFER</text>
+            <text x="120" y="150" font-family="Playfair Display" font-size="6" fill="#4a4f56" text-anchor="middle" opacity="0.75" letter-spacing="1.5">OF THE YEAR</text>
+            <!-- Decorative swash -->
+            <path d="M 78 126 Q 120 122 162 126" fill="none" stroke="#4a4f56" stroke-width="0.5" opacity="0.5"/>
+            <path d="M 78 158 Q 120 162 162 158" fill="none" stroke="#4a4f56" stroke-width="0.5" opacity="0.5"/>
+
             <!-- Shine highlight on bulb -->
-            <ellipse cx="85" cy="115" rx="12" ry="25" fill="white" opacity="0.3"/>
+            <ellipse cx="92" cy="118" rx="14" ry="30" fill="url(#bulbShine)"/>
+
+            <!-- Stem -->
+            <path d="M 102 200 L 138 200 L 135 222 L 105 222 Z" fill="url(#silverBodyO)" stroke="#4a4f56" stroke-width="1"/>
+            <ellipse cx="120" cy="222" rx="18" ry="2.5" fill="#4a4f56"/>
+
+            <!-- Wood plinth -->
+            <path d="M 72 222 L 168 222 L 162 254 L 78 254 Z" fill="#3e2414" stroke="#1a0f08" stroke-width="1"/>
+            <rect x="74" y="222" width="92" height="3" fill="#c0c5cc" opacity="0.5"/>
+            <rect x="88" y="232" width="64" height="14" fill="#d4af37" opacity="0.5" stroke="#8a6d1f" stroke-width="0.5"/>
+            <text x="120" y="242" font-family="Playfair Display" font-size="6" fill="#4a2c0f" text-anchor="middle" letter-spacing="1.5">2026</text>
           </svg>
         </div>
         <div class="nameplate">
           <div class="tourney">The Open</div>
           <div class="winner">— to be won —</div>
-          <div class="year">July 2026</div>
+          <div class="year">July 16–19, 2026</div>
         </div>
       </div>
     </div>
@@ -1266,7 +1477,7 @@
     </div>
     <div class="season-grid">
       <div class="major-card completed" style="--event-color: #f9e076">
-        <div class="month">April</div>
+        <div class="month">April 9–12</div>
         <div class="name">The Masters</div>
         <div class="venue">Augusta National · Augusta, GA</div>
         <div class="status-line status-completed">
@@ -1280,7 +1491,7 @@
         </div>
       </div>
       <div class="major-card" style="--event-color: #c9a961">
-        <div class="month">May</div>
+        <div class="month">May 14–17</div>
         <div class="name">PGA Championship</div>
         <div class="venue">Aronimink · Newtown Square, PA</div>
         <div class="status-line status-upcoming">
@@ -1289,7 +1500,7 @@
         </div>
       </div>
       <div class="major-card" style="--event-color: #e8cf87">
-        <div class="month">June</div>
+        <div class="month">June 18–21</div>
         <div class="name">U.S. Open</div>
         <div class="venue">Shinnecock Hills · Southampton, NY</div>
         <div class="status-line status-upcoming">
@@ -1298,7 +1509,7 @@
         </div>
       </div>
       <div class="major-card" style="--event-color: #d4af37">
-        <div class="month">July</div>
+        <div class="month">July 16–19</div>
         <div class="name">The Open</div>
         <div class="venue">Royal Birkdale · Southport, England</div>
         <div class="status-line status-upcoming">

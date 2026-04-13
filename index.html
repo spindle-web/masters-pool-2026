@@ -73,39 +73,65 @@
     letter-spacing: -0.01em;
   }
 
-  /* ============ NAVIGATION (matches trophy room) ============ */
+  /* ============ STICKY NAV (shared across all pages) ============ */
   nav.top {
+    position: sticky;
+    top: 0;
+    z-index: 100;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 28px 48px;
-    position: relative;
-    z-index: 10;
-    max-width: 1280px;
-    margin: 0 auto;
+    gap: 16px;
+    padding: 12px 32px;
+    background: rgba(6, 16, 11, 0.82);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border-bottom: 1px solid rgba(249, 224, 118, 0.18);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+  }
+  nav.top .brand {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 20px;
+    color: var(--theme-accent);
+    letter-spacing: 0;
+    text-transform: none;
+    white-space: nowrap;
+  }
+  nav.top .nav-links {
+    display: flex;
+    gap: 10px;
+    align-items: center;
   }
   nav.top a {
     color: var(--cream-dim);
     text-decoration: none;
-    font-size: 13px;
-    letter-spacing: 2px;
+    font-size: 12px;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
-    font-weight: 500;
-    transition: color 0.3s;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(249, 224, 118, 0.22);
+    background: rgba(255,255,255,0.03);
+    transition: all 0.25s ease;
   }
-  nav.top a:hover { color: var(--theme-accent); }
-  nav.top .brand {
-    font-family: 'Playfair Display', serif;
-    font-style: italic;
-    font-size: 22px;
+  nav.top a:hover {
     color: var(--theme-accent);
-    letter-spacing: 0;
-    text-transform: none;
+    border-color: var(--theme-accent);
+    background: rgba(249, 224, 118, 0.08);
   }
-  @media (max-width: 700px) {
-    nav.top { padding: 20px 24px; }
-    nav.top .brand { font-size: 18px; }
-    nav.top a { font-size: 11px; letter-spacing: 1.5px; }
+  nav.top a.active {
+    background: linear-gradient(135deg, var(--masters-gold), var(--masters-yellow));
+    color: var(--wood-dark);
+    border-color: var(--masters-yellow);
+    box-shadow: 0 2px 10px rgba(249, 224, 118, 0.3);
+  }
+  @media (max-width: 720px) {
+    nav.top { padding: 10px 16px; gap: 8px; }
+    nav.top .brand { font-size: 16px; }
+    nav.top a { font-size: 10px; padding: 6px 10px; letter-spacing: 1px; }
+    nav.top .nav-links { gap: 6px; }
   }
 
   /* ============ HERO ============ */
@@ -703,9 +729,12 @@
 <body>
 <main>
   <nav class="top">
-    <a href="history.html">Trophy Room</a>
     <span class="brand">The Majors Pool</span>
-    <a href="draft.html">Draft Room</a>
+    <div class="nav-links">
+      <a href="index.html" class="active">Live</a>
+      <a href="history.html">Trophy Room</a>
+      <a href="draft.html">Draft Room</a>
+    </div>
   </nav>
 
 <div class="container">
