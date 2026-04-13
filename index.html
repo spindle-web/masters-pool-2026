@@ -4,82 +4,164 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>The Majors Pool 🏆</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
   :root {
-    --masters-green: #006747;
+    --wood-dark: #2a1810;
+    --wood-mid: #4a2c1a;
+    --wood-light: #6b3e24;
+    --masters-green: #0b3b2a;
+    --masters-green-light: #145c3e;
     --masters-dark: #003d2b;
     --masters-darker: #002418;
     --masters-yellow: #f9e076;
-    --masters-gold: #d4a83a;
-    --cream: #fdf8e8;
+    --masters-gold: #d4af37;
+    --gold-bright: #f0c755;
+    --cream: #f5efdc;
+    --cream-dim: #d9d2bc;
     --white: #ffffff;
     --red: #c8102e;
-    --shadow: 0 4px 20px rgba(0,0,0,0.15);
+    --ink: #1a0f08;
+
+    /* Theme colors — shift per major */
+    --theme-primary: var(--masters-green);
+    --theme-accent: var(--masters-yellow);
+    --theme-deep: #04180f;
+
+    --shadow: 0 4px 20px rgba(0,0,0,0.35);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
   body {
-    font-family: 'Inter', sans-serif;
-    background:
-      radial-gradient(ellipse at top, #0a8a5a 0%, transparent 60%),
-      linear-gradient(180deg, var(--masters-dark) 0%, var(--masters-darker) 100%);
-    background-attachment: fixed;
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--theme-deep);
     color: var(--cream);
     min-height: 100vh;
-    padding: 20px;
+    overflow-x: hidden;
+    transition: background 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
   }
-  .container { max-width: 1200px; margin: 0 auto; }
+  /* Subtle grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(249,224,118,0.04) 0%, transparent 30%),
+      radial-gradient(circle at 80% 60%, rgba(11,59,42,0.15) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' /><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.04 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.6;
+  }
+  .container { max-width: 1200px; margin: 0 auto; position: relative; z-index: 2; padding: 0 20px 40px; }
 
-  header {
-    text-align: center;
-    padding: 70px 20px 60px;
-    position: relative;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.45);
-    border: 1px solid rgba(249, 224, 118, 0.35);
-    background:
-      linear-gradient(180deg, rgba(0,36,24,0.55) 0%, rgba(0,36,24,0.82) 100%),
-      #003d2b url("https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Augusta_National_Golf_Club%2C_Hole_10_%28Camellia%29.jpg/1280px-Augusta_National_Golf_Club%2C_Hole_10_%28Camellia%29.jpg") center/cover no-repeat;
+  h1, h2, h3, .serif {
+    font-family: 'Playfair Display', Georgia, serif;
+    letter-spacing: -0.01em;
   }
-  header > * { position: relative; }
-  header::before {
-    content: '⛳';
-    font-size: 60px;
-    display: block;
-    margin-bottom: 10px;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+
+  /* ============ NAVIGATION (matches trophy room) ============ */
+  nav.top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 28px 48px;
     position: relative;
+    z-index: 10;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+  nav.top a {
+    color: var(--cream-dim);
+    text-decoration: none;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 500;
+    transition: color 0.3s;
+  }
+  nav.top a:hover { color: var(--theme-accent); }
+  nav.top .brand {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 22px;
+    color: var(--theme-accent);
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  @media (max-width: 700px) {
+    nav.top { padding: 20px 24px; }
+    nav.top .brand { font-size: 18px; }
+    nav.top a { font-size: 11px; letter-spacing: 1.5px; }
+  }
+
+  /* ============ HERO ============ */
+  header.hero {
+    text-align: center;
+    padding: 20px 24px 60px;
+    position: relative;
+    z-index: 2;
+  }
+  header.hero .eyebrow {
+    font-size: 12px;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: var(--theme-accent);
+    opacity: 0.75;
+    margin-bottom: 18px;
+    font-weight: 500;
   }
   h1 {
     font-family: 'Playfair Display', serif;
-    font-size: clamp(36px, 6vw, 64px);
-    color: var(--masters-yellow);
-    font-weight: 900;
-    letter-spacing: 2px;
-    text-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    margin-bottom: 8px;
+    font-size: clamp(48px, 8vw, 96px);
+    font-weight: 700;
+    line-height: 0.95;
+    color: var(--cream);
+    margin-bottom: 22px;
+    font-style: italic;
+  }
+  h1 .amp {
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--theme-accent);
+    font-style: italic;
+    font-weight: 400;
   }
   .subtitle {
-    font-size: 18px;
-    color: var(--cream);
-    opacity: 0.85;
-    letter-spacing: 3px;
-    text-transform: uppercase;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-style: italic;
+    color: var(--cream-dim);
+    max-width: 640px;
+    margin: 0 auto 22px;
+    line-height: 1.5;
+    letter-spacing: 0;
+    text-transform: none;
+    opacity: 1;
   }
   .pot-banner {
     display: inline-block;
-    margin-top: 20px;
     background: linear-gradient(135deg, var(--masters-gold), var(--masters-yellow));
-    color: var(--masters-darker);
-    padding: 12px 32px;
-    border-radius: 50px;
+    color: var(--wood-dark);
+    padding: 10px 28px;
+    border-radius: 999px;
     font-weight: 700;
-    font-size: 18px;
-    box-shadow: var(--shadow);
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.35);
   }
   .rules {
     background: rgba(0,0,0,0.35);
@@ -619,15 +701,19 @@
 </style>
 </head>
 <body>
+<main>
+  <nav class="top">
+    <a href="history.html">Trophy Room</a>
+    <span class="brand">The Majors Pool</span>
+    <a href="draft.html">Draft Room</a>
+  </nav>
+
 <div class="container">
-  <header>
-    <h1>The Majors Pool</h1>
-    <div class="subtitle">Loading tournament…</div>
+  <header class="hero">
+    <div class="eyebrow" id="heroEyebrow">Live Leaderboard</div>
+    <h1 id="heroTitle">The Majors <span class="amp">&amp;</span> The Money</h1>
+    <p class="subtitle" id="subtitle">Loading tournament…</p>
     <div class="pot-banner">💰 Pot · Lowest Total Wins</div>
-    <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-      <a href="history.html" style="display:inline-block;padding:8px 18px;background:linear-gradient(135deg,#d4af37,#f9e076);color:#2a1810;border-radius:999px;text-decoration:none;font-weight:700;font-family:Georgia,serif;letter-spacing:0.5px;box-shadow:0 2px 8px rgba(0,0,0,0.3);">🏆 Trophy Room</a>
-      <a href="draft.html" style="display:inline-block;padding:8px 18px;background:rgba(255,255,255,0.08);color:var(--cream);border:1px solid rgba(249,224,118,0.4);border-radius:999px;text-decoration:none;font-weight:700;font-family:Georgia,serif;letter-spacing:0.5px;">📋 Draft Room</a>
-    </div>
   </header>
   <div class="rules">
     <strong>The Rules:</strong> Each player drafted 6 golfers for $25. Lowest combined total strokes wins the $75 pot.
@@ -675,6 +761,7 @@
     Data from ESPN public leaderboard
   </footer>
 </div>
+</main>
 
 <script>
 // ============ POOL DATA ============
@@ -887,10 +974,26 @@ async function loadTournamentConfig() {
     applyTournamentTheme(t);
     // Update header / title text
     document.title = `${t.name || 'The Majors Pool'} 🏆`;
-    const h1 = document.querySelector('header h1');
-    if (h1) h1.textContent = t.name || 'The Majors Pool';
-    const subEl = document.querySelector('header .subtitle');
-    if (subEl) subEl.textContent = `${t.course || ''}${t.course ? ' · ' : ''}${t.name?.match(/\d{4}/) ? t.name.match(/\d{4}/)[0] : new Date().getFullYear()}`;
+    const h1 = document.getElementById('heroTitle');
+    if (h1 && t.name) {
+      // Keep stylized italic h1; split name into two italicized phrases with the ornamental amp
+      const parts = (t.name || '').split(/\s+/);
+      if (parts.length >= 2) {
+        const mid = Math.ceil(parts.length / 2);
+        const left = parts.slice(0, mid).join(' ');
+        const right = parts.slice(mid).join(' ');
+        h1.innerHTML = `${left} <span class="amp">&amp;</span> ${right}`;
+      } else {
+        h1.textContent = t.name;
+      }
+    }
+    const eyebrowEl = document.getElementById('heroEyebrow');
+    if (eyebrowEl) {
+      const year = t.name?.match(/\d{4}/) ? t.name.match(/\d{4}/)[0] : new Date().getFullYear();
+      eyebrowEl.textContent = `Live Leaderboard · ${year}`;
+    }
+    const subEl = document.getElementById('subtitle');
+    if (subEl) subEl.textContent = t.course ? `At ${t.course}` : 'Live pool tracker';
     const potEl = document.querySelector('header .pot-banner');
     if (potEl) potEl.textContent = `💰 $${t.pot || 0} Pot · Lowest Total Wins`;
     // Update rules text
@@ -922,13 +1025,9 @@ function applyTournamentTheme(t) {
   document.documentElement.style.setProperty('--masters-darker', th.dark);
   document.documentElement.style.setProperty('--masters-yellow', th.accent);
   document.documentElement.style.setProperty('--masters-gold', th.gold);
-  // Only apply the Augusta background for the Masters theme
-  if (theme !== 'masters') {
-    const header = document.querySelector('header');
-    if (header) {
-      header.style.background = `linear-gradient(180deg, ${th.dark} 0%, ${th.primary} 100%)`;
-    }
-  }
+  document.documentElement.style.setProperty('--theme-primary', th.primary);
+  document.documentElement.style.setProperty('--theme-accent', th.accent);
+  document.documentElement.style.setProperty('--theme-deep', th.dark);
 }
 
 async function load() {
