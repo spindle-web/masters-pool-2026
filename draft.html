@@ -418,13 +418,13 @@
       <summary style="cursor:pointer;font-weight:600;color:var(--theme-accent);font-family:'Playfair Display',serif;font-size:18px;">Advanced settings</summary>
       <div style="margin-top:18px;">
         <div class="field">
-          <label>DataGolf API key (optional, for win probabilities)</label>
+          <label>Odds API key (optional — not required)</label>
           <div class="inline-row">
-            <input id="dgKeyInput" type="password" placeholder="Paste key and save" style="flex:1;" />
-            <button class="btn btn-primary btn-sm" id="saveDgKeyBtn">Save key</button>
+            <input id="dgKeyInput" type="password" placeholder="Future use only" style="flex:1;" disabled />
+            <button class="btn btn-ghost btn-sm" id="saveDgKeyBtn" disabled>Save key</button>
           </div>
-          <div class="help">Free signup at datagolf.com/api-access-model. Without this, golfers sort by world ranking.</div>
-          <div id="dgKeyStatus" class="help"></div>
+          <div class="help">Currently golfers are sorted by ESPN world ranking. A paid odds feed can be plugged in here later if you want win-probability sort instead.</div>
+          <div id="dgKeyStatus" class="help" style="display:none;"></div>
         </div>
         <div class="field">
           <label>Change admin password</label>
@@ -891,10 +891,11 @@ async function loadField() {
 function renderGolferList() {
   const q = (document.getElementById('golferSearch').value || '').toLowerCase();
   const drafted = new Set(STATE.picks.map(p => p.golferId));
+  const fieldCount = STATE.field.length;
   document.getElementById('oddsSource').textContent =
-    STATE.oddsSource === 'datagolf' ? 'Sorted by DataGolf win probability'
-    : STATE.oddsSource === 'datagolf_empty' ? 'DataGolf key set but no data — using world ranking'
-    : 'Sorted by world ranking (no odds source configured)';
+    fieldCount === 0
+      ? 'No field loaded yet — ESPN may not have published entries for this event. Try refreshing closer to tournament start.'
+      : `${fieldCount} golfers in the field · sorted by world ranking (best → worst)`;
   const list = document.getElementById('golferList');
   list.innerHTML = '';
   let shown = 0;
