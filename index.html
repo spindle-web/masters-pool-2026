@@ -1079,17 +1079,11 @@ async function load() {
   // Show sections again if they were hidden
   document.querySelectorAll('#bonusBanner, #cutLineBox, #tourneyBoard, #weatherStrip').forEach(el => el && (el.style.display = ''));
   try {
-    // Try leaderboard endpoint first, fall back to scoreboard
-    let data = null;
-    let resp = await fetch(getEspnUrl(), { cache: "no-store" });
-    if (resp.ok) data = await resp.json();
+    // Try scoreboard first (reliable for all events), fall back to leaderboard
+    let event = null, comp = null, competitors = [];
 
-    let event = data?.events?.[0] || data;
-    let comp = event?.competitions?.[0];
-    let competitors = comp?.competitors || [];
-
-    // Fallback: scoreboard endpoint (has field before leaderboard populates)
-    if (!competitors.length && ESPN_EVENT_ID) {
+    // Primary: scoreboard endpoint
+    if (ESPN_EVENT_ID) {
       try {
         const sbResp = await fetch(`https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard?event=${ESPN_EVENT_ID}`, { cache: "no-store" });
         if (sbResp.ok) {
@@ -1102,6 +1096,17 @@ async function load() {
           }
         }
       } catch (e2) {}
+    }
+
+    // Fallback: leaderboard endpoint
+    if (!competitors.length) {
+      const resp = await fetch(getEspnUrl(), { cache: "no-store" });
+      if (resp.ok) {
+        const data = await resp.json();
+        event = data?.events?.[0] || data;
+        comp = event?.competitions?.[0];
+        competitors = comp?.competitors || [];
+      }
     }
 
     if (!competitors.length) throw new Error("No competitor data yet");
