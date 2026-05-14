@@ -753,7 +753,7 @@
   </div>
 
   <div class="weather-strip" id="weatherStrip">
-    <span class="wx-title">Augusta</span>
+    <span class="wx-title">⛳</span>
     <span class="wx-loading">fetching weather…</span>
   </div>
 
@@ -810,22 +810,25 @@ const ESPN_URL = ESPN_URL_BASE; // legacy binding; code below uses getEspnUrl() 
 
 // ============ CHART CONFIG ============
 let PAR = 72; // overridden from config
-// Approximate round end times (7:30pm ET Thu/Fri, 6:30pm ET Sat/Sun)
-const ROUND_END_TIMES_UTC = [
-  '2026-04-09T23:30:00Z',
-  '2026-04-10T23:30:00Z',
-  '2026-04-11T22:30:00Z',
-  '2026-04-12T22:30:00Z'
+// Approximate round end times — computed dynamically from tournament start date.
+// Default: Thu start, ~7:30pm ET each day. Overridden when config loads.
+let ROUND_END_TIMES_UTC = [
+  '2026-05-14T23:30:00Z',
+  '2026-05-15T23:30:00Z',
+  '2026-05-16T22:30:00Z',
+  '2026-05-17T22:30:00Z'
 ];
-const SNAPSHOT_KEY = 'mp2026_snapshots_v1';
+let SNAPSHOT_KEY = 'mp2026_snapshots_v1'; // updated per-tournament in loadTournamentConfig
 const MAX_SNAPSHOTS = 600;
 let TEAM_COLORS = { Tagan: '#f9e076', Jepic: '#4ade80', Bigra: '#f87171' };
 
 // ============ NEW FEATURE CONFIG ============
 let MISSED_CUT_PENALTY_PER_WEEKEND_ROUND = 3; // overridden from config
 const WORKER_URL = "https://masters-pool-notifier.spindle-web.workers.dev";
-const AUGUSTA_LAT = 33.5031;
-const AUGUSTA_LON = -82.0237;
+// Venue coordinates — overridden from tournament config if available
+let VENUE_LAT = 33.5031;  // default: Augusta
+let VENUE_LON = -82.0237;
+let VENUE_NAME = "Course";
 // Hot/Cold window (over the last 4 holes)
 const HC_WINDOW = 4;
 const HOT_THRESHOLD = -2; // <= -2 over last 4 holes = 🔥
@@ -1082,6 +1085,53 @@ async function loadTournamentConfig() {
         TEAM_COLORS[team.name] = p?.color || team.color || '#888';
       }
     }
+    // Venue location for weather — use config coords if available, else look up by course name
+    VENUE_NAME = t.course || t.name || "Course";
+    if (t.latitude && t.longitude) {
+      VENUE_LAT = t.latitude;
+      VENUE_LON = t.longitude;
+    } else {
+      // Known major venues
+      const venues = {
+        "augusta national":      { lat: 33.5031, lon: -82.0237 },
+        "aronimink":             { lat: 40.0067, lon: -75.4053 },
+        "oakmont":               { lat: 40.5278, lon: -79.8253 },
+        "royal portrush":        { lat: 55.2064, lon: -6.6536 },
+        "royal liverpool":       { lat: 53.4364, lon: -3.1867 },
+        "royal troon":           { lat: 55.5439, lon: -4.8500 },
+        "pinehurst":             { lat: 35.1954, lon: -79.4700 },
+        "shinnecock":            { lat: 40.8892, lon: -72.4500 },
+        "valhalla":              { lat: 38.2528, lon: -85.4450 },
+        "quail hollow":          { lat: 35.0536, lon: -80.8550 },
+        "bethpage":              { lat: 40.7454, lon: -73.4535 },
+        "torrey pines":          { lat: 32.8998, lon: -117.2519 },
+        "southern hills":        { lat: 36.0797, lon: -95.9452 },
+      };
+      const courseLower = (t.course || "").toLowerCase();
+      for (const [key, coords] of Object.entries(venues)) {
+        if (courseLower.includes(key)) {
+          VENUE_LAT = coords.lat;
+          VENUE_LON = coords.lon;
+          break;
+        }
+      }
+    }
+    // Per-tournament snapshot key so old tournament data doesn't bleed through
+    if (t.id) SNAPSHOT_KEY = `mp_snapshots_${t.id}`;
+    // Compute round end times from tournament start date
+    if (t.startTime) {
+      const start = new Date(t.startTime);
+      if (!isNaN(start)) {
+        ROUND_END_TIMES_UTC = [];
+        for (let i = 0; i < 4; i++) {
+          const d = new Date(start);
+          d.setDate(d.getDate() + i);
+          // ~7:30pm ET for R1/R2, ~6:30pm ET for R3/R4
+          d.setUTCHours(i < 2 ? 23 : 22, 30, 0, 0);
+          ROUND_END_TIMES_UTC.push(d.toISOString());
+        }
+      }
+    }
     // Apply theme
     applyTournamentTheme(t);
     // Update header / title text
@@ -1272,7 +1322,10 @@ async function load() {
     // Tournament leader bonus check
     const tourneyLeader = competitors.find(c => {
       const pos = c.status?.position?.displayName || "";
-      return pos === "1" || pos === "T1";
+      if (pos === "1" || pos === "T1") return true;
+      // Scoreboard format: order === 1 means leader
+      if (c.order === 1) return true;
+      return false;
     });
     renderBonus(tourneyLeader, teamResults);
 
@@ -1833,25 +1886,30 @@ function computeProjectedCut(competitors) {
   const scored = [];
   for (const c of competitors) {
     const status = c.status || {};
-    const pos = status.position?.displayName || "";
+    const pos = c.status?.position?.displayName || "";
     if (/WD|DQ/i.test(pos)) continue;
-    const stateName = status.type?.state || "";
-    // Only include players who've recorded at least one stroke in R1
+    const stateName = c.status?.type?.state || "";
+    // Only include players who've recorded at least one hole
     const ls = c.linescores || [];
+    const hasAnyHoles = ls.some(l => (l.linescores || []).length > 0);
     const hasAnyRound = ls.some(l => {
       const raw = typeof l === "object" ? (l?.value ?? l?.displayValue) : l;
       const v = parseInt(raw, 10);
       return !isNaN(v) && v >= 60 && v <= 100;
     });
-    // Or currently in progress
-    const inProgress = stateName === "in" || stateName === "post";
+    const inProgress = stateName === "in" || stateName === "post" || hasAnyHoles;
     if (!hasAnyRound && !inProgress) continue;
 
+    // Get to-par: try statistics first, then c.score (scoreboard format)
     const stats = c.statistics || [];
     const stpStat = stats.find(s => s && (s.name === "scoreToPar" || s.abbreviation === "TO PAR"));
     let toPar = 0;
     if (stpStat && typeof stpStat.value === "number") {
       toPar = stpStat.value;
+    } else if (typeof c.score === "number") {
+      toPar = c.score;
+    } else if (typeof c.score === "string") {
+      toPar = parseToPar(c.score);
     } else if (c.score && typeof c.score === "object" && typeof c.score.value === "number") {
       toPar = c.score.value;
     } else {
@@ -1882,9 +1940,9 @@ function classifyCut(g, cutLineInfo) {
 async function fetchWeather() {
   // Open-Meteo: free, no API key required.
   const url = `https://api.open-meteo.com/v1/forecast` +
-    `?latitude=${AUGUSTA_LAT}&longitude=${AUGUSTA_LON}` +
+    `?latitude=${VENUE_LAT}&longitude=${VENUE_LON}` +
     `&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,precipitation` +
-    `&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America/New_York`;
+    `&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
   try {
     const r = await fetch(url);
     if (!r.ok) throw new Error("HTTP " + r.status);
@@ -1921,7 +1979,7 @@ function renderWeather(w) {
   if (!el) return;
   if (!w) {
     el.innerHTML = `
-      <span class="wx-title">Augusta</span>
+      <span class="wx-title">${VENUE_NAME}</span>
       <span class="wx-loading">weather unavailable</span>`;
     return;
   }
@@ -1933,7 +1991,7 @@ function renderWeather(w) {
     ? `<span class="wx-item">🌧️ <span class="wx-value">${w.precipitation.toFixed(2)}"</span></span>`
     : "";
   el.innerHTML = `
-    <span class="wx-title">⛳ Augusta</span>
+    <span class="wx-title">⛳ ${VENUE_NAME}</span>
     <span class="wx-item">${icon} <span class="wx-value">${temp}°F</span></span>
     <span class="wx-item">💨 <span class="wx-value">${wind} mph ${dir}</span></span>
     ${precip}
@@ -2077,7 +2135,7 @@ function renderCutLineBanner(cutLineInfo, tournamentRound) {
     </div>`;
 }
 
-// ---- Tournament leaderboard strip (top 10 of the Masters) ----
+// ---- Tournament leaderboard strip (top 10) ----
 function renderTournamentLeaderboard(competitors) {
   const body = document.getElementById("tourneyBoardBody");
   if (!body || !Array.isArray(competitors)) return;
@@ -2090,16 +2148,24 @@ function renderTournamentLeaderboard(competitors) {
     }
   }
 
-  // Sort by numeric position, keep only those with a parsable position
-  const scored = competitors
-    .map(c => {
-      const status = c.status || {};
-      const posStr = status.position?.displayName || "";
-      const posNum = parseInt(posStr.replace(/\D/g, ""), 10);
-      return { c, status, posStr, posNum };
-    })
-    .filter(x => !isNaN(x.posNum) && x.posNum > 0 && !/(CUT|WD|DQ|MDF)/i.test(x.posStr))
-    .sort((a, b) => a.posNum - b.posNum);
+  // Detect format: leaderboard has status.position, scoreboard has order
+  const isLeaderboard = competitors.some(c => c.status?.position?.displayName);
+
+  // Normalize each competitor into { c, posNum, posStr }
+  const scored = competitors.map(c => {
+    let posNum, posStr;
+    if (isLeaderboard) {
+      posStr = c.status?.position?.displayName || "";
+      posNum = parseInt(posStr.replace(/\D/g, ""), 10);
+    } else {
+      // Scoreboard format: order is the ranking
+      posNum = c.order || 999;
+      posStr = String(posNum);
+    }
+    return { c, posStr, posNum };
+  })
+  .filter(x => !isNaN(x.posNum) && x.posNum > 0)
+  .sort((a, b) => a.posNum - b.posNum);
 
   // Take all ties that end at pos <= 10
   const top = scored.filter(x => x.posNum <= 10);
@@ -2108,35 +2174,66 @@ function renderTournamentLeaderboard(competitors) {
     return;
   }
 
-  const rows = top.map(({ c, status, posStr }) => {
+  const rows = top.map(({ c, posStr }) => {
     const name = c.athlete?.displayName || "—";
+
+    // Get to-par score
     let toPar = null;
-    if (status.type?.state !== "pre") {
-      const stats = c.statistics || [];
-      const stpStat = stats.find(s => s && (s.name === "scoreToPar" || s.abbreviation === "TO PAR"));
-      if (stpStat && typeof stpStat.value === "number") {
-        toPar = stpStat.value;
-      } else if (typeof c.score === "number") {
-        toPar = c.score;
-      } else if (typeof c.score === "string") {
-        toPar = parseToPar(c.score);
-      } else if (c.score && typeof c.score === "object") {
-        if (typeof c.score.value === "number") toPar = c.score.value;
-        else if (typeof c.score.displayValue === "string") toPar = parseToPar(c.score.displayValue);
+    const status = c.status || {};
+    if (isLeaderboard) {
+      if (status.type?.state !== "pre") {
+        const stats = c.statistics || [];
+        const stpStat = stats.find(s => s && (s.name === "scoreToPar" || s.abbreviation === "TO PAR"));
+        if (stpStat && typeof stpStat.value === "number") {
+          toPar = stpStat.value;
+        } else if (typeof c.score === "number") {
+          toPar = c.score;
+        } else if (typeof c.score === "string") {
+          toPar = parseToPar(c.score);
+        }
       }
+    } else {
+      // Scoreboard: c.score is to-par directly
+      if (typeof c.score === "number") toPar = c.score;
+      else if (typeof c.score === "string") toPar = parseToPar(c.score);
     }
     const scoreDisp = toPar == null ? "—" : formatToPar(toPar);
     const scoreCls = toPar == null ? "" : toParClass(toPar);
 
     // Thru / tee time
-    const stateStr = status.type?.state || "";
     let thruDisp = "";
-    if (stateStr === "post") {
-      thruDisp = "F";
-    } else if (stateStr === "in") {
-      thruDisp = status.thru != null ? `thru ${status.thru}` : "live";
-    } else if (stateStr === "pre") {
-      thruDisp = status.type?.shortDetail || "—";
+    if (isLeaderboard) {
+      const stateStr = status.type?.state || "";
+      if (stateStr === "post") thruDisp = "F";
+      else if (stateStr === "in") thruDisp = status.thru != null ? `thru ${status.thru}` : "live";
+      else if (stateStr === "pre") thruDisp = status.type?.shortDetail || "—";
+    } else {
+      // Scoreboard: derive from linescores
+      const ls = c.linescores || [];
+      const activeRound = ls.find(r => {
+        const h = r.linescores || [];
+        return h.length > 0 && h.length < 18;
+      });
+      if (activeRound) {
+        thruDisp = `thru ${(activeRound.linescores || []).length}`;
+      } else {
+        const lastPlayed = [...ls].reverse().find(r => (r.linescores || []).length > 0);
+        if (lastPlayed && (lastPlayed.linescores || []).length === 18) {
+          thruDisp = "F";
+        } else {
+          // Pre-tee: extract tee time
+          try {
+            const cats = ls[0]?.statistics?.categories || [];
+            const stats = cats[0]?.stats || [];
+            const teeStr = stats[stats.length - 1]?.displayValue || "";
+            if (teeStr && /\d/.test(teeStr)) {
+              const d = parseEspnDate(teeStr);
+              if (d && !isNaN(d)) thruDisp = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+            }
+          } catch (e) {}
+          if (!thruDisp) thruDisp = "—";
+        }
+      }
     }
 
     const owner = draftedMap.get(normalizeName(name));
