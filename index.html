@@ -889,43 +889,111 @@ function getGolferData(competitor) {
   }
 
   const status = competitor.status || {};
-  const position = status.position?.displayName || status.position?.id || "—";
-  const cut = /(CUT|WD|DQ|MDF)/i.test(position) || /cut/i.test(status.displayValue || "");
-  const stateName = status.type?.state || ""; // pre | in | post
+  const isLeaderboardFmt = !!(status.type?.state);
 
-  // Holes played on the day (current round)
-  let thru = "";
-  const thruRaw = typeof status.thru === "number" ? status.thru : 0;
-  if (stateName === "post" || status.type?.completed) {
-    thru = "F";
-  } else if (thruRaw > 0) {
-    thru = thruRaw === 18 ? "F" : `Thru ${thruRaw}`;
-  } else if (status.teeTime) {
-    try {
-      const d = new Date(status.teeTime);
-      thru = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    } catch (e) { thru = ""; }
+  // ============ POSITION ============
+  let position;
+  if (isLeaderboardFmt) {
+    position = status.position?.displayName || status.position?.id || "—";
+  } else {
+    // Scoreboard format — "order" is ranking (1-based)
+    const ord = competitor.order;
+    position = ord ? String(ord) : "—";
   }
 
-  // Total strokes across all played rounds; also capture per-round strokes array
+  const cut = /(CUT|WD|DQ|MDF)/i.test(position) || /cut/i.test(status.displayValue || "");
+
+  // ============ LINESCORES & STROKES ============
   let strokes = 0;
+  let thruRaw = 0;
+  let thru = "";
+  let stateName = "";
   const roundStrokes = [null, null, null, null];
   const linescores = competitor.linescores || [];
-  linescores.forEach(ls => {
-    const raw = typeof ls === "object" ? (ls.value ?? ls.displayValue) : ls;
-    const v = parseInt(raw, 10);
-    if (!isNaN(v) && v > 0) strokes += v;
-    const period = (typeof ls === "object" ? ls.period : null) || null;
-    // Only treat as "round result" if value looks like a full round (60..100)
-    if (period && !isNaN(v) && v >= 60 && v <= 100) {
-      roundStrokes[period - 1] = v;
-    }
-  });
 
-  // score to par
+  if (isLeaderboardFmt) {
+    // Leaderboard format: each linescore = one round, value = total round strokes (60-100)
+    linescores.forEach(ls => {
+      const raw = typeof ls === "object" ? (ls.value ?? ls.displayValue) : ls;
+      const v = parseInt(raw, 10);
+      if (!isNaN(v) && v > 0) strokes += v;
+      const period = (typeof ls === "object" ? ls.period : null) || null;
+      if (period && !isNaN(v) && v >= 60 && v <= 100) {
+        roundStrokes[period - 1] = v;
+      }
+    });
+    stateName = status.type?.state || "";
+    thruRaw = typeof status.thru === "number" ? status.thru : 0;
+    if (stateName === "post" || status.type?.completed) {
+      thru = "F";
+    } else if (thruRaw > 0) {
+      thru = thruRaw === 18 ? "F" : `Thru ${thruRaw}`;
+    } else if (status.teeTime) {
+      try {
+        const d = new Date(status.teeTime);
+        thru = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      } catch (e) { thru = ""; }
+    }
+  } else {
+    // Scoreboard format: each linescore = one round object
+    // linescore.linescores = array of hole-by-hole scores for that round
+    // linescore.value = running stroke total for that round
+    let currentRoundHoles = 0;
+    linescores.forEach((ls, i) => {
+      const holes = ls.linescores || [];
+      const roundTotal = ls.value != null ? Number(ls.value) : 0;
+      if (roundTotal > 0) strokes += roundTotal;
+      if (holes.length === 18 && roundTotal >= 50) {
+        // Completed round
+        roundStrokes[i] = roundTotal;
+      }
+      if (holes.length > 0 && holes.length < 18) {
+        currentRoundHoles = holes.length;
+      } else if (holes.length === 18) {
+        currentRoundHoles = 18;
+      }
+      // Track the latest round's hole count for thru
+      if (i === linescores.length - 1 || (holes.length > 0 && holes.length < 18)) {
+        thruRaw = holes.length;
+      }
+    });
+
+    // Figure out the active round's holes
+    const activeRound = linescores.find(ls => {
+      const h = ls.linescores || [];
+      return h.length > 0 && h.length < 18;
+    });
+    if (activeRound) {
+      thruRaw = (activeRound.linescores || []).length;
+      thru = `Thru ${thruRaw}`;
+      stateName = "in";
+    } else {
+      // Check if any round is fully complete
+      const lastPlayed = [...linescores].reverse().find(ls => (ls.linescores || []).length > 0);
+      if (lastPlayed && (lastPlayed.linescores || []).length === 18) {
+        thru = "F";
+        thruRaw = 18;
+        stateName = "post";
+      } else if (!lastPlayed || (lastPlayed.linescores || []).length === 0) {
+        // No holes played — extract tee time from stats if available
+        stateName = "pre";
+        try {
+          const cats = linescores[0]?.statistics?.categories || [];
+          const stats = cats[0]?.stats || [];
+          const teeStr = stats[stats.length - 1]?.displayValue || "";
+          if (teeStr && /\d/.test(teeStr)) {
+            const d = new Date(teeStr);
+            if (!isNaN(d)) thru = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+          }
+        } catch (e) {}
+      }
+    }
+  }
+
+  // ============ SCORE TO PAR ============
   let toPar = 0;
   const stats = competitor.statistics || [];
-  const stpStat = stats.find(s => s && (s.name === "scoreToPar" || s.abbreviation === "TO PAR"));
+  const stpStat = Array.isArray(stats) ? stats.find(s => s && (s.name === "scoreToPar" || s.abbreviation === "TO PAR")) : null;
   if (stpStat && typeof stpStat.value === "number") {
     toPar = stpStat.value;
   } else {
@@ -938,16 +1006,12 @@ function getGolferData(competitor) {
     }
   }
 
-  // Visual state flags
+  // ============ STATE FLAGS ============
   const roundDone = stateName === "post" && !cut;
   const onCourse  = stateName === "in" && !cut;
   const preTee    = stateName === "pre" && !cut;
 
-  // "Today" score: current-round to-par.
-  // Derived as tournament-toPar minus sum of all PRIOR completed rounds' to-par.
-  // This is more reliable than linescores[currentRound-1] mid-round, because
-  // the live toPar (from statistics) updates hole-by-hole while linescores
-  // only reflects strokes-so-far (which isn't a finished-round total).
+  // ============ TODAY SCORE ============
   let todayToPar = null;
   const currentRoundIdx = (status.period || 1) - 1;
   if (stateName === "in" || stateName === "post") {
