@@ -862,6 +862,13 @@ function findCompetitor(name, competitors) {
   return c;
 }
 
+// Fix timezone abbreviations that browsers can't parse (PDT, PST, EDT, EST, CDT, CST, MDT, MST)
+function fixTzAbbrev(s) {
+  if (!s || typeof s !== 'string') return s;
+  const map = { PDT:'-0700', PST:'-0800', MDT:'-0600', MST:'-0700', CDT:'-0500', CST:'-0600', EDT:'-0400', EST:'-0500' };
+  return s.replace(/\b(PDT|PST|MDT|MST|CDT|CST|EDT|EST)\b/, (m) => map[m] || m);
+}
+
 function parseToPar(str) {
   if (!str || str === "E" || str === "-") return 0;
   return parseInt(str, 10) || 0;
@@ -930,7 +937,7 @@ function getGolferData(competitor) {
       thru = thruRaw === 18 ? "F" : `Thru ${thruRaw}`;
     } else if (status.teeTime) {
       try {
-        const d = new Date(status.teeTime);
+        const d = new Date(fixTzAbbrev(status.teeTime));
         thru = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
       } catch (e) { thru = ""; }
     }
@@ -982,7 +989,7 @@ function getGolferData(competitor) {
           const stats = cats[0]?.stats || [];
           const teeStr = stats[stats.length - 1]?.displayValue || "";
           if (teeStr && /\d/.test(teeStr)) {
-            const d = new Date(teeStr);
+            const d = new Date(fixTzAbbrev(teeStr));
             if (!isNaN(d)) thru = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
           }
         } catch (e) {}
