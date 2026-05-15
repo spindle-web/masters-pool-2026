@@ -1134,7 +1134,21 @@ function getGolferData(competitor) {
 
   // ============ TODAY SCORE ============
   let todayToPar = null;
-  const currentRoundIdx = (status.period || 1) - 1;
+  // Determine current round index: leaderboard has status.period,
+  // scoreboard needs to infer from linescores (find the last round with any holes played).
+  let currentRoundIdx = 0;
+  if (status.period) {
+    currentRoundIdx = status.period - 1;
+  } else {
+    // Scoreboard: find the latest round with hole data
+    for (let i = linescores.length - 1; i >= 0; i--) {
+      const holes = (linescores[i]?.linescores || []);
+      if (holes.length > 0) {
+        currentRoundIdx = i;
+        break;
+      }
+    }
+  }
   if (stateName === "in" || stateName === "post") {
     let priorToPar = 0;
     for (let i = 0; i < currentRoundIdx; i++) {
