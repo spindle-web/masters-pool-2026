@@ -1089,22 +1089,48 @@ function getGolferData(competitor) {
       thru = `Thru ${thruRaw}`;
       stateName = "in";
     } else {
-      // Check if any round is fully complete
-      const lastPlayed = [...linescores].reverse().find(ls => (ls.linescores || []).length > 0);
-      if (lastPlayed && (lastPlayed.linescores || []).length === 18) {
+      // No round currently in progress. Check if there's a future round
+      // with 0 holes (pre-tee for next round) vs all rounds finished.
+      const lastPlayedIdx = (() => {
+        for (let i = linescores.length - 1; i >= 0; i--) {
+          if ((linescores[i].linescores || []).length > 0) return i;
+        }
+        return -1;
+      })();
+      // Check if there's a linescore AFTER the last played one with 0 holes (= upcoming round)
+      const nextRound = lastPlayedIdx >= 0 && lastPlayedIdx < linescores.length - 1
+        ? linescores[lastPlayedIdx + 1]
+        : null;
+      const nextRoundHoles = nextRound ? (nextRound.linescores || []).length : -1;
+
+      if (nextRound && nextRoundHoles === 0) {
+        // Pre-tee for the next round — show tee time
+        stateName = "pre";
+        thruRaw = 0;
+        try {
+          const cats = nextRound.statistics?.categories || [];
+          const sts = cats[0]?.stats || [];
+          const teeStr = sts[sts.length - 1]?.displayValue || "";
+          if (teeStr && /\d/.test(teeStr)) {
+            const d = parseEspnDate(teeStr);
+            if (d && !isNaN(d)) thru = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+          }
+        } catch (e) {}
+      } else if (lastPlayedIdx >= 0 && (linescores[lastPlayedIdx].linescores || []).length === 18) {
+        // Last round is fully complete and no next round exists — finished
         thru = "F";
         thruRaw = 18;
         stateName = "post";
-      } else if (!lastPlayed || (lastPlayed.linescores || []).length === 0) {
-        // No holes played — extract tee time from stats if available
+      } else if (lastPlayedIdx < 0) {
+        // No holes played at all — extract tee time from first linescore
         stateName = "pre";
         try {
           const cats = linescores[0]?.statistics?.categories || [];
-          const stats = cats[0]?.stats || [];
-          const teeStr = stats[stats.length - 1]?.displayValue || "";
+          const sts = cats[0]?.stats || [];
+          const teeStr = sts[sts.length - 1]?.displayValue || "";
           if (teeStr && /\d/.test(teeStr)) {
             const d = parseEspnDate(teeStr);
-            if (!isNaN(d)) thru = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+            if (d && !isNaN(d)) thru = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
           }
         } catch (e) {}
       }
