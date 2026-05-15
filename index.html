@@ -301,6 +301,18 @@
   .to-par.under { color: #4ade80; }
   .to-par.over { color: #f87171; }
   .to-par.even { color: var(--cream); }
+  .team-today-score {
+    font-size: 13px;
+    margin-top: 6px;
+    opacity: 0.7;
+    letter-spacing: 0.3px;
+    font-family: 'Inter', sans-serif;
+  }
+  .team-today-score .to-par {
+    font-size: 13px;
+    font-weight: 700;
+    margin-top: 0;
+  }
 
   .golfer-header {
     display: grid;
@@ -1601,6 +1613,11 @@ function renderStandings(teams, leader, ranked, cutLineInfo, hcByGolferId) {
         </li>`;
     }).join("");
 
+    // Team today to-par (sum of individual todayToPar values)
+    const teamTodayParts = team.golferData.filter(g => g.todayToPar != null);
+    const teamTodayToPar = teamTodayParts.reduce((s, g) => s + g.todayToPar, 0);
+    const hasTeamToday = teamTodayParts.length > 0;
+
     // Progress bar
     const pctPlayed = team.totalHoles > 0 ? Math.round((team.holesPlayed / team.totalHoles) * 100) : 0;
     const allDone = team.holesRemaining === 0;
@@ -1616,6 +1633,7 @@ function renderStandings(teams, leader, ranked, cutLineInfo, hcByGolferId) {
       <div class="team-total">
         <div class="label">Total To Par</div>
         <div class="score big-par ${toParClass(team.totalToPar)}">${formatToPar(team.totalToPar)}</div>
+        ${hasTeamToday ? `<div class="team-today-score">Today: <span class="to-par ${toParClass(teamTodayToPar)}">${formatToPar(teamTodayToPar)}</span></div>` : ''}
       </div>
       <div class="team-progress">
         <div class="pg-header">
