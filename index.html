@@ -1000,7 +1000,7 @@ function toParClass(n) {
   return "even";
 }
 
-function getGolferData(competitor) {
+function getGolferData(competitor, tournamentRound) {
   if (!competitor) {
     return {
       strokes: null, toPar: null, position: "—", thru: "",
@@ -1104,8 +1104,14 @@ function getGolferData(competitor) {
         : null;
       const nextRoundHoles = nextRound ? (nextRound.linescores || []).length : -1;
 
-      if (nextRound && nextRoundHoles === 0) {
-        // Pre-tee for the next round — show tee time
+      // tournamentRound is 1-indexed; lastPlayedIdx is 0-indexed
+      const tRound = tournamentRound || 1;
+      const finishedCurrentRound = lastPlayedIdx >= 0
+        && (linescores[lastPlayedIdx].linescores || []).length === 18
+        && (lastPlayedIdx + 1) >= tRound;  // they've completed at least the current round
+
+      if (nextRound && nextRoundHoles === 0 && !finishedCurrentRound) {
+        // Tournament has moved to next round and golfer hasn't started — show tee time
         stateName = "pre";
         thruRaw = 0;
         try {
@@ -1118,7 +1124,7 @@ function getGolferData(competitor) {
           }
         } catch (e) {}
       } else if (lastPlayedIdx >= 0 && (linescores[lastPlayedIdx].linescores || []).length === 18) {
-        // Last round is fully complete and no next round exists — finished
+        // Finished their round — show F
         thru = "F";
         thruRaw = 18;
         stateName = "post";
@@ -1393,7 +1399,7 @@ async function load() {
     const teamResults = TEAMS.map(team => {
       const golferData = team.golfers.map(name => {
         const c = findCompetitor(name, competitors);
-        return { name, ...getGolferData(c) };
+        return { name, ...getGolferData(c, round) };
       });
       const totalStrokes = golferData.reduce((s, g) => s + (g.strokes || 0), 0);
 
@@ -1475,7 +1481,7 @@ async function load() {
     const cutLineInfo = computeProjectedCut(competitors);
     renderCutLineBanner(cutLineInfo, round);
     renderTournamentLeaderboard(competitors);
-    renderHateWatch(competitors);
+    renderHateWatch(competitors, round);
     const hcByGolferId = await fetchHotCold();
     renderStandings(teamResults, leader, ranked, cutLineInfo, hcByGolferId);
     recordSnapshot(teamResults);
@@ -2431,7 +2437,7 @@ const HATE_WATCH_MATCHUPS = [
   { good: "Justin Thomas", bad: "Matt Fitzpatrick" },
 ];
 
-function renderHateWatch(competitors) {
+function renderHateWatch(competitors, tournamentRound) {
   const body = document.getElementById("hateWatchBody");
   const totalsEl = document.getElementById("hateWatchTotals");
   if (!body) return;
@@ -2441,8 +2447,8 @@ function renderHateWatch(competitors) {
   const rows = HATE_WATCH_MATCHUPS.map(({ good, bad }) => {
     const gComp = findCompetitor(good, competitors);
     const bComp = findCompetitor(bad, competitors);
-    const gData = getGolferData(gComp);
-    const bData = getGolferData(bComp);
+    const gData = getGolferData(gComp, tournamentRound);
+    const bData = getGolferData(bComp, tournamentRound);
 
     const gPar = gData.toPar || 0;
     const bPar = bData.toPar || 0;
