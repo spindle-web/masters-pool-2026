@@ -1525,12 +1525,32 @@ function renderBonus(tourneyLeader, teamResults) {
   }
 }
 
+function ordinal(n) {
+  const s = ["th","st","nd","rd"];
+  const v = n % 100;
+  return n + (s[(v-20)%10] || s[v] || s[0]);
+}
+
 function renderStandings(teams, leader, ranked, cutLineInfo, hcByGolferId) {
   const container = document.getElementById("standings");
   container.innerHTML = "";
+
+  // Compute proper placement with ties (same toPar = same rank)
+  const placements = {};
+  let currentRank = 1;
+  for (let i = 0; i < ranked.length; i++) {
+    if (i > 0 && ranked[i].totalToPar > ranked[i-1].totalToPar) {
+      currentRank = i + 1;
+    }
+    placements[ranked[i].name] = currentRank;
+  }
+  // Detect ties at the lead
+  const leadScore = ranked[0]?.totalToPar;
+  const tiedForLead = ranked.filter(r => r.totalToPar === leadScore).length;
+
   teams.forEach(team => {
-    const rank = ranked.findIndex(r => r.name === team.name) + 1;
-    const isLeader = team.name === leader.name && (team.totalStrokes > 0 || team.totalToPar < 0);
+    const rank = placements[team.name] || (ranked.findIndex(r => r.name === team.name) + 1);
+    const isLeader = team.totalToPar === leadScore && (team.totalStrokes > 0 || team.totalToPar < 0);
     const card = document.createElement("div");
     card.className = "team-card" + (isLeader ? " leader" : "");
 
@@ -1585,7 +1605,7 @@ function renderStandings(teams, leader, ranked, cutLineInfo, hcByGolferId) {
     card.innerHTML = `
       <div class="team-header">
         <div class="team-name">${team.name}</div>
-        <div class="team-rank">${rank === 1 ? '1st' : rank === 2 ? '2nd' : '3rd'} place</div>
+        <div class="team-rank">${rank === 1 && tiedForLead > 1 ? `T1st · Tied for lead` : `${ordinal(rank)} place`}</div>
       </div>
       <div class="team-total">
         <div class="label">Total To Par</div>
