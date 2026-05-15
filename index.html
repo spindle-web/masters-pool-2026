@@ -925,6 +925,7 @@ let TEAM_COLORS = { Tagan: '#f9e076', Jepic: '#4ade80', Bigra: '#f87171' };
 
 // ============ NEW FEATURE CONFIG ============
 let MISSED_CUT_PENALTY_PER_WEEKEND_ROUND = 3; // overridden from config
+let CUT_LINE_POSITION = 70; // top N including ties make the cut; overridden from config
 const WORKER_URL = "https://masters-pool-notifier.spindle-web.workers.dev";
 // Venue coordinates — overridden from tournament config if available
 let VENUE_LAT = 33.5031;  // default: Augusta
@@ -1214,6 +1215,7 @@ async function loadTournamentConfig() {
     ESPN_EVENT_ID = t.eventId || null;
     if (t.par) PAR = Number(t.par);
     if (t.cutPenalty != null) MISSED_CUT_PENALTY_PER_WEEKEND_ROUND = Number(t.cutPenalty);
+    if (t.cutLine != null) CUT_LINE_POSITION = Number(t.cutLine);
     if (Array.isArray(t.teams) && t.teams.length) {
       TEAMS = t.teams.map(team => ({
         name: team.name,
@@ -2059,10 +2061,10 @@ function computeProjectedCut(competitors) {
     }
     scored.push(toPar);
   }
-  if (scored.length < 50) return { projected: null, tournamentState: null };
+  if (scored.length < CUT_LINE_POSITION) return { projected: null, tournamentState: null };
   scored.sort((a, b) => a - b);
-  // 50th best score (0-indexed: index 49)
-  const projected = scored[49];
+  // Nth best score (0-indexed) where N = CUT_LINE_POSITION
+  const projected = scored[CUT_LINE_POSITION - 1];
   return { projected };
 }
 

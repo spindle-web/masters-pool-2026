@@ -369,6 +369,10 @@
           <input id="f_cutPenalty" type="number" value="3" />
         </div>
         <div class="field">
+          <label>Cut line (top N + ties)</label>
+          <input id="f_cutLine" type="number" value="70" min="1" max="156" />
+        </div>
+        <div class="field">
           <label>Par / round</label>
           <input id="f_par" type="number" value="72" />
         </div>
@@ -621,7 +625,7 @@ function renderActive() {
   badge.innerHTML = `<span class="badge ${statusClass}">${t.status || 'setup'}</span>`;
   sum.innerHTML = `
     <div style="font-family:'Playfair Display',serif;font-size:28px;color:var(--theme-accent);">${t.name || 'Untitled'}</div>
-    <div style="color:var(--cream-dim);margin:4px 0;">${t.course || ''} · Pot $${t.pot||0} · ${t.golfersPerTeam||6} golfers/team · Cut penalty +${t.cutPenalty||3}/round</div>
+    <div style="color:var(--cream-dim);margin:4px 0;">${t.course || ''} · Pot $${t.pot||0} · ${t.golfersPerTeam||6} golfers/team · Cut top ${t.cutLine||70} · Penalty +${t.cutPenalty||3}/round</div>
     <div style="color:var(--cream-dim);font-size:13px;">${t.startISO ? new Date(t.startISO).toLocaleString() : ''} → ${t.endISO ? new Date(t.endISO).toLocaleString() : ''}</div>
   `;
   document.getElementById('draftOrderCard').classList.remove('hidden');
@@ -744,6 +748,7 @@ document.getElementById('editTournamentBtn').onclick = () => {
   document.getElementById('f_pot').value = t.pot || 75;
   document.getElementById('f_golfersPerTeam').value = t.golfersPerTeam || 6;
   document.getElementById('f_cutPenalty').value = t.cutPenalty || 3;
+  document.getElementById('f_cutLine').value = t.cutLine || 70;
   document.getElementById('f_par').value = t.par || 72;
   document.getElementById('f_start').value = toLocalInput(t.startISO);
   document.getElementById('f_end').value = toLocalInput(t.endISO);
@@ -763,6 +768,7 @@ document.getElementById('saveSetupBtn').onclick = async () => {
   t.pot = Number(document.getElementById('f_pot').value) || 0;
   t.golfersPerTeam = Number(document.getElementById('f_golfersPerTeam').value) || 6;
   t.cutPenalty = Number(document.getElementById('f_cutPenalty').value) || 3;
+  t.cutLine = Number(document.getElementById('f_cutLine').value) || 70;
   t.par = Number(document.getElementById('f_par').value) || 72;
   t.startISO = fromLocalInput(document.getElementById('f_start').value);
   t.endISO = fromLocalInput(document.getElementById('f_end').value);
