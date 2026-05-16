@@ -1111,7 +1111,9 @@ function getGolferData(competitor, tournamentRound) {
       }
     }
   }
-  if (stateName === "in" || stateName === "post") {
+  if (cut) {
+    todayToPar = null; // cut golfers don't have a "today" score
+  } else if (stateName === "in" || stateName === "post") {
     let priorToPar = 0;
     for (let i = 0; i < currentRoundIdx; i++) {
       if (roundStrokes[i] != null) {
