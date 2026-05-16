@@ -936,7 +936,7 @@ function getGolferData(competitor, tournamentRound) {
     position = ord ? String(ord) : "—";
   }
 
-  const cut = /(CUT|WD|DQ|MDF)/i.test(position) || /cut/i.test(status.displayValue || "");
+  let cut = /(CUT|WD|DQ|MDF)/i.test(position) || /cut/i.test(status.displayValue || "");
 
   // ============ LINESCORES & STROKES ============
   let strokes = 0;
@@ -945,6 +945,15 @@ function getGolferData(competitor, tournamentRound) {
   let stateName = "";
   const roundStrokes = [null, null, null, null];
   const linescores = competitor.linescores || [];
+
+  // Scoreboard cut detection: if tournament is in R3+ and golfer has
+  // fewer linescores than the tournament round, they missed the cut.
+  if (!isLeaderboardFmt && !cut && tournamentRound >= 3) {
+    const completedRounds = linescores.filter(ls => (ls.linescores || []).length === 18).length;
+    if (completedRounds >= 2 && linescores.length < tournamentRound) {
+      cut = true;
+    }
+  }
 
   if (isLeaderboardFmt) {
     // Leaderboard format: each linescore = one round, value = total round strokes (60-100)
@@ -1055,6 +1064,13 @@ function getGolferData(competitor, tournamentRound) {
         } catch (e) {}
       }
     }
+  }
+
+  // Override display for cut golfers
+  if (cut) {
+    thru = "CUT";
+    stateName = "post";
+    position = "CUT";
   }
 
   // ============ SCORE TO PAR ============
