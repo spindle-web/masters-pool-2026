@@ -314,6 +314,29 @@
     margin-top: 0;
   }
 
+  .team-penalty-badge {
+    margin-top: 8px;
+    padding: 6px 12px;
+    background: linear-gradient(135deg, #ff4444, #cc0000);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 6px;
+    display: inline-block;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    animation: penaltyPulse 2s ease-in-out infinite;
+    box-shadow: 0 2px 8px rgba(255, 0, 0, 0.3);
+  }
+  .team-penalty-badge .penalty-amount {
+    font-size: 14px;
+    margin-left: 2px;
+  }
+  @keyframes penaltyPulse {
+    0%, 100% { box-shadow: 0 2px 8px rgba(255, 0, 0, 0.3); }
+    50% { box-shadow: 0 2px 16px rgba(255, 0, 0, 0.6); }
+  }
+
   .golfer-header {
     display: grid;
     grid-template-columns: 1fr auto auto auto auto;
@@ -1154,10 +1177,19 @@ async function loadTournamentConfig() {
     if (t.cutPenalty != null) MISSED_CUT_PENALTY_PER_WEEKEND_ROUND = Number(t.cutPenalty);
     if (t.cutLine != null) CUT_LINE_POSITION = Number(t.cutLine);
     if (Array.isArray(t.teams) && t.teams.length) {
-      TEAMS = t.teams.map(team => ({
-        name: team.name,
-        golfers: team.golfers || [],
-      }));
+      TEAMS = t.teams.map(team => {
+        // Merge config penalties with any hardcoded ones
+        const penalties = team.penalties ? [...team.penalties] : [];
+        // Hardcoded penalties (add here as needed)
+        if (team.name === "Jepic") {
+          penalties.push({ amount: 20, label: "Bitch Penalty" });
+        }
+        return {
+          name: team.name,
+          golfers: team.golfers || [],
+          penalties,
+        };
+      });
       const players = j.players || [];
       TEAM_COLORS = {};
       for (const team of t.teams) {
@@ -1363,6 +1395,11 @@ async function load() {
           holesRemaining += 18;
         }
       });
+      // Apply manual team penalties
+      const teamPenalties = team.penalties || [];
+      const penaltyTotal = teamPenalties.reduce((s, p) => s + (p.amount || 0), 0);
+      totalToPar += penaltyTotal;
+
       return {
         ...team,
         golferData,
@@ -1370,7 +1407,9 @@ async function load() {
         totalToPar,
         holesRemaining,
         holesPlayed,
-        totalHoles
+        totalHoles,
+        penalties: teamPenalties,
+        penaltyTotal
       };
     });
 
@@ -1552,6 +1591,7 @@ function renderStandings(teams, leader, ranked, cutLineInfo, hcByGolferId) {
         <div class="label">Total To Par</div>
         <div class="score big-par ${toParClass(team.totalToPar)}">${formatToPar(team.totalToPar)}</div>
         ${hasTeamToday ? `<div class="team-today-score">Today: <span class="to-par ${toParClass(teamTodayToPar)}">${formatToPar(teamTodayToPar)}</span></div>` : ''}
+        ${team.penaltyTotal ? team.penalties.map(p => `<div class="team-penalty-badge">⚠️ ${p.label || 'Penalty'}: <span class="penalty-amount">+${p.amount}</span></div>`).join('') : ''}
       </div>
       <div class="team-progress">
         <div class="pg-header">
@@ -1687,6 +1727,9 @@ function reconstructRoundBoundaries(competitors) {
           }
         }
       });
+      // Apply manual team penalties (e.g. Bitch Penalty)
+      const teamPenalty = (team.penalties || []).reduce((s, p) => s + (p.amount || 0), 0);
+      totalToPar += teamPenalty;
       return hasAnyData ? { name: team.name, toPar: totalToPar } : null;
     });
     if (teamPoints.every(tp => tp !== null)) {
