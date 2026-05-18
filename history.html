@@ -490,8 +490,8 @@
   }
   .cards-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 32px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
     perspective: 1500px;
   }
   .player-card {
@@ -1126,7 +1126,7 @@
       </div>
 
       <!-- Wanamaker Trophy — PGA Championship -->
-      <div class="trophy unfilled" data-theme="pga">
+      <div class="trophy filled" data-theme="pga">
         <div class="trophy-art">
           <svg viewBox="0 0 240 280" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -1198,8 +1198,8 @@
         </div>
         <div class="nameplate">
           <div class="tourney">PGA Championship</div>
-          <div class="winner">— to be won —</div>
-          <div class="year">May 14–17, 2026</div>
+          <div class="winner">Jepic</div>
+          <div class="year">— May 14–17, 2026 —</div>
         </div>
       </div>
 
@@ -1359,7 +1359,7 @@
   <section class="season">
     <div class="season-header">
       <h2>The Season<span class="year-num">2026</span></h2>
-      <span class="subtitle">Four crowns. Three teams. One jacket so far.</span>
+      <span class="subtitle">Four crowns. Five teams. Two trophies claimed.</span>
     </div>
     <div class="season-grid">
       <div class="major-card completed" style="--event-color: #f9e076">
@@ -1376,13 +1376,17 @@
           <span class="score">−21</span>
         </div>
       </div>
-      <div class="major-card" style="--event-color: #c9a961">
+      <div class="major-card completed" style="--event-color: #c9a961">
         <div class="month">May 14–17</div>
         <div class="name">PGA Championship</div>
         <div class="venue">Aronimink · Newtown Square, PA</div>
-        <div class="status-line status-upcoming">
+        <div class="status-line status-completed">
           <span class="status-dot"></span>
-          <span>Up Next</span>
+          <span>Completed</span>
+        </div>
+        <div class="winner-line">
+          <span class="label">Pool Winner</span>
+          <span class="name-line">Jepic</span>
         </div>
       </div>
       <div class="major-card" style="--event-color: #e8cf87">
@@ -1411,7 +1415,7 @@
     <div class="players-header">
       <div class="eyebrow">The Competitors</div>
       <h2>Hall of <em>Fame</em></h2>
-      <p class="desc">Three rivals, one jacket, and a lifetime of tee-to-green pettiness. Flip a card.</p>
+      <p class="desc">Five rivals, two trophies, and a lifetime of tee-to-green pettiness. Flip a card.</p>
     </div>
     <div class="cards-grid" id="player-cards">
       <!-- rendered by JS -->
@@ -1609,30 +1613,24 @@
         mastersFinish: '2nd (−12)',
         bestGolfer: 'Scottie Scheffler (−11)',
         lowRound: '65 (Scheffler, R3)',
-        birdies: 81,
-        eagles: 4,
-        doubles: 8,
-        pars: 248,
-        bogeys: 55
+        titles: 0,
+        majorsPlayed: 2
       },
-      h2h: { Jepic: 'L', Bigra: 'W' }
+      h2h: { Jepic: '0-2', Bigra: '1-0' }
     },
     {
       name: 'Jepic',
       color: '#4ade80',
       emoji: '🟢',
-      subtitle: '2026 Masters Champion',
+      subtitle: '2× Major Champion',
       stats: {
         mastersFinish: '1st (−21) 🏆',
         bestGolfer: 'Cameron Young (−10)',
         lowRound: '65 (Young, R3)',
-        birdies: 86,
-        eagles: 4,
-        doubles: 3,
-        pars: 244,
-        bogeys: 59
+        titles: 2,
+        majorsPlayed: 2
       },
-      h2h: { Tagan: 'W', Bigra: 'W' }
+      h2h: { Tagan: '2-0', Bigra: '2-0' }
     },
     {
       name: 'Bigra',
@@ -1643,13 +1641,38 @@
         mastersFinish: '3rd (−7)',
         bestGolfer: 'Rory McIlroy (−12)',
         lowRound: '65 (McIlroy, R2)',
-        birdies: 94,
-        eagles: 1,
-        doubles: 12,
-        pars: 230,
-        bogeys: 59
+        titles: 0,
+        majorsPlayed: 2
       },
-      h2h: { Tagan: 'L', Jepic: 'L' }
+      h2h: { Tagan: '0-1', Jepic: '0-2' }
+    },
+    {
+      name: 'Max',
+      color: '#60a5fa',
+      emoji: '🔵',
+      subtitle: 'The newcomer',
+      stats: {
+        mastersFinish: '—',
+        bestGolfer: 'TBD',
+        lowRound: 'TBD',
+        titles: 0,
+        majorsPlayed: 1
+      },
+      h2h: { Coletti: 'TBD' }
+    },
+    {
+      name: 'Coletti',
+      color: '#a78bfa',
+      emoji: '🟣',
+      subtitle: 'Under the microscope',
+      stats: {
+        mastersFinish: '—',
+        bestGolfer: 'TBD',
+        lowRound: 'TBD',
+        titles: 0,
+        majorsPlayed: 1
+      },
+      h2h: { Max: 'TBD' }
     }
   ];
 
@@ -1679,18 +1702,18 @@
     if (n === 0) return 'E';
     return (n > 0 ? '+' : '') + n;
   }
-  const TEAM_COLORS = { Tagan: '#f9e076', Jepic: '#4ade80', Bigra: '#f87171' };
+  const TEAM_COLORS = { Tagan: '#f9e076', Jepic: '#4ade80', Bigra: '#f87171', Max: '#60a5fa', Coletti: '#a78bfa' };
 
   function renderPlayerCards() {
     const grid = document.getElementById('player-cards');
-    grid.innerHTML = TEAMS.map((t, idx) => {
-      const ranks = ['2nd of 3', 'Champion', '3rd of 3'];
-      const rank = t.name === 'Jepic' ? ranks[1] : t.name === 'Tagan' ? ranks[0] : ranks[2];
+    grid.innerHTML = TEAMS.map((t) => {
+      const titleCount = t.stats.titles || 0;
+      const rank = titleCount >= 2 ? `${titleCount}× Champion` : titleCount === 1 ? 'Champion' : 'Contender';
       const opponentList = Object.entries(t.h2h)
         .map(([opp, res]) => `
           <div class="h2h-row">
             <span class="opp">vs ${opp}</span>
-            <span class="${res === 'W' ? 'win' : 'loss'}">${res === 'W' ? 'W 1-0' : 'L 0-1'}</span>
+            <span>${res}</span>
           </div>
         `).join('');
       return `
@@ -1703,20 +1726,17 @@
               <div class="team-subtitle">${t.subtitle}</div>
             </div>
             <div class="big-stat">
-              <div class="num">${t.stats.mastersFinish.split(' ')[0]}</div>
-              <div class="label">at the Masters ${t.stats.mastersFinish.split(' ')[1] || ''}</div>
+              <div class="num">${titleCount}</div>
+              <div class="label">Title${titleCount !== 1 ? 's' : ''} · ${t.stats.majorsPlayed || 0} Major${(t.stats.majorsPlayed||0) !== 1 ? 's' : ''} Played</div>
             </div>
             <div class="flip-hint">✦ tap to flip ✦</div>
           </div>
           <div class="card-face card-back">
             <div class="back-title">${t.name}</div>
-            <div class="back-subtitle">Career · 1 Major</div>
-            <div class="stat-row"><span class="lbl">Masters '26</span><span class="val">${t.stats.mastersFinish}</span></div>
+            <div class="back-subtitle">Career · ${t.stats.majorsPlayed || 0} Majors</div>
+            ${t.stats.mastersFinish !== '—' ? `<div class="stat-row"><span class="lbl">Masters '26</span><span class="val">${t.stats.mastersFinish}</span></div>` : ''}
             <div class="stat-row"><span class="lbl">Best Pick</span><span class="val" style="font-size: 13px;">${t.stats.bestGolfer}</span></div>
             <div class="stat-row"><span class="lbl">Low Round</span><span class="val">${t.stats.lowRound}</span></div>
-            <div class="stat-row"><span class="lbl">Birdies</span><span class="val">${t.stats.birdies}</span></div>
-            <div class="stat-row"><span class="lbl">Eagles</span><span class="val">${t.stats.eagles}</span></div>
-            <div class="stat-row"><span class="lbl">Doubles+</span><span class="val">${t.stats.doubles}</span></div>
             <div class="h2h-matrix">
               <div class="lbl">Head-to-Head</div>
               ${opponentList}
@@ -1741,33 +1761,9 @@
   }
 
   function renderTeamStats() {
+    // Team stats section is now populated dynamically from archives
     const grid = document.getElementById('team-stats');
-    // Find max values to scale bars
-    const maxBirdies = Math.max(...TEAMS.map(t => t.stats.birdies));
-    const maxEagles = Math.max(...TEAMS.map(t => t.stats.eagles));
-    const maxDoubles = Math.max(...TEAMS.map(t => t.stats.doubles));
-
-    grid.innerHTML = TEAMS.map(t => `
-      <div class="team-stat-card" style="--card-color: ${t.color};">
-        <h4>${t.name}</h4>
-        <div class="bar-stat">
-          <div class="bar-label"><span>Birdies</span><span class="val">${t.stats.birdies}</span></div>
-          <div class="bar"><div class="bar-fill" style="width: ${(t.stats.birdies / maxBirdies * 100).toFixed(0)}%"></div></div>
-        </div>
-        <div class="bar-stat">
-          <div class="bar-label"><span>Eagles</span><span class="val">${t.stats.eagles}</span></div>
-          <div class="bar"><div class="bar-fill" style="width: ${(t.stats.eagles / maxEagles * 100).toFixed(0)}%"></div></div>
-        </div>
-        <div class="bar-stat">
-          <div class="bar-label"><span>Doubles+ (bad)</span><span class="val">${t.stats.doubles}</span></div>
-          <div class="bar"><div class="bar-fill" style="width: ${(t.stats.doubles / maxDoubles * 100).toFixed(0)}%; background: #fb7185;"></div></div>
-        </div>
-        <div class="mini-stat-row" style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed rgba(249,224,118,0.15);">
-          <span class="lbl">Pars</span><span class="val">${t.stats.pars}</span>
-        </div>
-        <div class="mini-stat-row"><span class="lbl">Bogeys</span><span class="val">${t.stats.bogeys}</span></div>
-      </div>
-    `).join('');
+    grid.innerHTML = '';
   }
 
   // ============ TROPHY THEME SWITCHING ============
@@ -1789,42 +1785,138 @@
   // Render team stats after a tick so bars animate in
   setTimeout(renderTeamStats, 150);
 
-  // ============ DYNAMIC: ARCHIVED TOURNAMENTS ============
-  // Fetches /archives from the worker and appends a card per archived
-  // tournament beyond the hardcoded Masters '26.
+  // ============ DYNAMIC: PAST TOURNAMENT HISTORY ============
   const WORKER_URL = "https://masters-pool-notifier.spindle-web.workers.dev";
+  const THEME_COLORS = {
+    masters: { accent: '#f9e076', bg: 'rgba(11,59,42,0.15)' },
+    pga: { accent: '#c9a961', bg: 'rgba(25,55,97,0.15)' },
+    usopen: { accent: '#e8cf87', bg: 'rgba(160,29,63,0.15)' },
+    open: { accent: '#d4af37', bg: 'rgba(12,35,64,0.15)' }
+  };
+
+  function fmtToPar(n) {
+    if (n == null) return '—';
+    if (n === 0) return 'E';
+    return n > 0 ? '+' + n : String(n);
+  }
+
+  function renderTournamentDetail(a) {
+    const theme = THEME_COLORS[a.major || a.theme] || THEME_COLORS.masters;
+    const results = a.teamResults || a.standings || [];
+    if (!results.length) return '';
+
+    // Podium (top 3)
+    const podiumColors = ['#f9e076', '#c0c5cc', '#cd7f32'];
+    const podiumLabels = ['Champion', 'Runner-up', 'Third'];
+    const podium = results.slice(0, 3);
+
+    // Build golfer table for each team
+    const teamSections = results.map((team, idx) => {
+      const golfers = (team.golfers || []).map(g => {
+        const rounds = (g.roundStrokes || []).map(r => r != null ? r : '—').join(' · ');
+        const cutLabel = g.isCut ? ' <span style="color:#fb7185;font-size:11px;">MC</span>' : '';
+        return `
+          <li style="display:grid;grid-template-columns:1fr auto auto;gap:12px;padding:8px 0;border-bottom:1px dashed rgba(249,224,118,0.08);font-size:14px;align-items:baseline;">
+            <span style="${g.isCut ? 'text-decoration:line-through;opacity:0.5;' : ''}">${g.name}${cutLabel}</span>
+            <span style="color:var(--cream-dim);font-size:12px;">${rounds}</span>
+            <span style="font-family:'Playfair Display',serif;font-weight:600;color:${(g.toPar||0) <= 0 ? '#4ade80' : '#fb7185'};min-width:40px;text-align:right;">${fmtToPar(g.toPar)}</span>
+          </li>
+        `;
+      }).join('');
+
+      const teamColor = TEAM_COLORS[team.name] || '#888';
+      return `
+        <div style="background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.005));border:1px solid ${teamColor}44;border-radius:10px;padding:20px;margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;">
+            <div>
+              <span style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;font-style:italic;color:${teamColor};">${team.name}</span>
+              <span style="font-size:12px;color:var(--cream-dim);margin-left:8px;">${idx === 0 ? '🏆 Champion' : ordinal(idx + 1) + ' place'}</span>
+            </div>
+            <span style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:${(team.toPar||0) <= 0 ? '#4ade80' : '#fb7185'};">${fmtToPar(team.toPar)}</span>
+          </div>
+          <ul style="list-style:none;">${golfers}</ul>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <section class="featured" id="tourney-${a.id || ''}">
+        <div class="featured-header">
+          <div class="eyebrow">— ${a.winner ? a.winner + "'s Victory" : 'Tournament Report'} —</div>
+          <h2>${a.name || 'Tournament'}</h2>
+          <div class="venue-line">${a.course || ''}</div>
+        </div>
+
+        <div class="podium">
+          ${podium.length >= 3 ? `
+            <div class="podium-step" style="--podium-color: ${podiumColors[1]}">
+              <div class="medal">2</div>
+              <div class="place-label">${podiumLabels[1]}</div>
+              <div class="team">${podium[1].name}</div>
+              <div class="score">${fmtToPar(podium[1].toPar)}</div>
+              <div class="gap">${podium[1].toPar - podium[0].toPar > 0 ? (podium[1].toPar - podium[0].toPar) + ' strokes back' : 'tied'}</div>
+            </div>
+            <div class="podium-step first" style="--podium-color: ${podiumColors[0]}">
+              <div class="medal">1</div>
+              <div class="place-label">${podiumLabels[0]}</div>
+              <div class="team">${podium[0].name}</div>
+              <div class="score">${fmtToPar(podium[0].toPar)}</div>
+              <div class="gap">${a.winner ? 'the trophy is theirs' : ''}</div>
+            </div>
+            <div class="podium-step" style="--podium-color: ${podiumColors[2]}">
+              <div class="medal">3</div>
+              <div class="place-label">${podiumLabels[2]}</div>
+              <div class="team">${podium[2].name}</div>
+              <div class="score">${fmtToPar(podium[2].toPar)}</div>
+              <div class="gap">${podium[2].toPar - podium[0].toPar > 0 ? (podium[2].toPar - podium[0].toPar) + ' strokes back' : 'tied'}</div>
+            </div>
+          ` : podium.map((p, i) => `
+            <div class="podium-step ${i === 0 ? 'first' : ''}" style="--podium-color: ${podiumColors[i]}">
+              <div class="medal">${i + 1}</div>
+              <div class="team">${p.name}</div>
+              <div class="score">${fmtToPar(p.toPar)}</div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div style="max-width:800px;margin:40px auto 0;">
+          <h3 style="font-family:'Playfair Display',serif;font-size:24px;font-style:italic;color:var(--cream);margin-bottom:20px;">Full <span style="color:${theme.accent};">Results</span></h3>
+          ${teamSections}
+        </div>
+      </section>
+    `;
+  }
+
+  function ordinal(n) {
+    const s = ['th','st','nd','rd'];
+    const v = n % 100;
+    return n + (s[(v-20)%10] || s[v] || s[0]);
+  }
+
   (async function loadArchives() {
     try {
       const r = await fetch(WORKER_URL + '/archives');
       if (!r.ok) return;
       const j = await r.json();
-      const arr = (j.archives || []).filter(a => a && a.id && a.name);
-      // Filter out Masters '26 (already hardcoded) by matching name
-      const extras = arr.filter(a => !/masters.*2026/i.test(a.name));
-      if (!extras.length) return;
-      const section = document.createElement('section');
-      section.style.cssText = 'padding:60px 40px;max-width:1200px;margin:0 auto;';
-      section.innerHTML = `
-        <h2 style="font-family:'Playfair Display',serif;font-size:36px;color:var(--theme-accent);text-align:center;margin-bottom:28px;">Archived Tournaments</h2>
-        <div id="archiveCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;"></div>
-      `;
-      document.querySelector('main').appendChild(section);
-      const cardsDiv = section.querySelector('#archiveCards');
-      extras.forEach(a => {
-        const teams = (a.teams || []).map(t => {
-          const total = (t.finalScore != null) ? t.finalScore : null;
-          return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(212,175,55,0.1);"><span>${t.name}</span><span style="color:var(--theme-accent);font-weight:700;">${total != null ? (total > 0 ? '+'+total : total) : '—'}</span></div>`;
-        }).join('');
-        const card = document.createElement('div');
-        card.style.cssText = 'background:linear-gradient(135deg,rgba(42,24,16,0.9),rgba(26,15,8,0.95));border:1px solid rgba(212,175,55,0.2);border-radius:12px;padding:24px;';
-        card.innerHTML = `
-          <div style="font-family:'Playfair Display',serif;font-size:24px;color:var(--theme-accent);margin-bottom:4px;">${a.name}</div>
-          <div style="color:var(--cream-dim);font-size:13px;margin-bottom:16px;">${a.course || ''} · Pot $${a.pot || 0}</div>
-          ${teams}
-          ${a.winner ? `<div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(212,175,55,0.2);color:var(--masters-yellow);font-weight:600;">🏆 Winner: ${a.winner}</div>` : ''}
-        `;
-        cardsDiv.appendChild(card);
-      });
+      const archives = (j.archives || []).filter(a => a && a.id);
+
+      if (!archives.length) return;
+
+      // Insert detailed tournament sections before the awards
+      const awardsSection = document.querySelector('.awards');
+      const container = document.createElement('div');
+
+      // Sort by date (most recent first, but after the hardcoded Masters)
+      archives
+        .filter(a => a.teamResults || a.standings) // only show tournaments with detailed data
+        .reverse()
+        .forEach(a => {
+          container.innerHTML += renderTournamentDetail(a);
+        });
+
+      if (container.innerHTML) {
+        awardsSection.parentNode.insertBefore(container, awardsSection);
+      }
     } catch (e) { console.warn('archives load failed', e); }
   })();
 </script>

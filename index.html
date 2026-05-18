@@ -1177,19 +1177,11 @@ async function loadTournamentConfig() {
     if (t.cutPenalty != null) MISSED_CUT_PENALTY_PER_WEEKEND_ROUND = Number(t.cutPenalty);
     if (t.cutLine != null) CUT_LINE_POSITION = Number(t.cutLine);
     if (Array.isArray(t.teams) && t.teams.length) {
-      TEAMS = t.teams.map(team => {
-        // Merge config penalties with any hardcoded ones
-        const penalties = team.penalties ? [...team.penalties] : [];
-        // Hardcoded penalties (add here as needed)
-        if (team.name === "Jepic") {
-          penalties.push({ amount: 20, label: "Bitch Penalty" });
-        }
-        return {
-          name: team.name,
-          golfers: team.golfers || [],
-          penalties,
-        };
-      });
+      TEAMS = t.teams.map(team => ({
+        name: team.name,
+        golfers: team.golfers || [],
+        penalties: team.penalties || [],
+      }));
       const players = j.players || [];
       TEAM_COLORS = {};
       for (const team of t.teams) {

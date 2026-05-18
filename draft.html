@@ -329,6 +329,17 @@
     <!-- TOURNAMENT SETUP FORM -->
     <div class="card hidden" id="setupCard">
       <div class="card-title">Tournament Setup</div>
+      <div class="field" style="margin-bottom:20px;">
+        <label>Major</label>
+        <select id="f_major" onchange="applyMajorPreset(this.value)">
+          <option value="">Custom tournament</option>
+          <option value="masters">The Masters</option>
+          <option value="pga">PGA Championship</option>
+          <option value="usopen">U.S. Open</option>
+          <option value="open">The Open Championship</option>
+        </select>
+        <div class="help">Select a major to auto-fill venue, par, cut line, and theme</div>
+      </div>
       <div class="grid2">
         <div class="field">
           <label>Tournament name</label>
@@ -394,6 +405,11 @@
       <div class="inline-row" style="margin-top:12px;">
         <button class="btn btn-primary" id="saveSetupBtn">Save setup</button>
         <button class="btn btn-ghost" id="cancelSetupBtn">Cancel</button>
+      </div>
+      <div style="margin-top:24px; padding-top:20px; border-top:1px solid rgba(249,224,118,0.15);">
+        <button class="btn" id="finalizeBtn" style="background:linear-gradient(135deg,#d4af37,#f9e076);color:#2a1810;font-weight:700;">🏆 Finalize Tournament</button>
+        <div class="help" style="margin-top:6px;">Archives final results, updates trophy room, and marks tournament as completed. Use when tournament is over.</div>
+        <div id="finalizeStatus" style="margin-top:8px;font-size:13px;"></div>
       </div>
     </div>
 
@@ -476,6 +492,61 @@
 
 <script>
 const WORKER_URL = "https://masters-pool-notifier.spindle-web.workers.dev";
+
+const MAJOR_PRESETS = {
+  masters: {
+    name: "The Masters",
+    course: "Augusta National Golf Club",
+    theme: "masters",
+    par: 72,
+    cutLine: 50,
+    cutPenalty: 3,
+    venue: "Augusta, GA",
+    month: "April"
+  },
+  pga: {
+    name: "PGA Championship",
+    course: "", // varies each year
+    theme: "pga",
+    par: 70,
+    cutLine: 70,
+    cutPenalty: 3,
+    venue: "",
+    month: "May"
+  },
+  usopen: {
+    name: "U.S. Open",
+    course: "", // varies each year
+    theme: "usopen",
+    par: 70,
+    cutLine: 60,
+    cutPenalty: 3,
+    venue: "",
+    month: "June"
+  },
+  open: {
+    name: "The Open Championship",
+    course: "", // varies each year
+    theme: "open",
+    par: 72,
+    cutLine: 70,
+    cutPenalty: 3,
+    venue: "",
+    month: "July"
+  }
+};
+
+function applyMajorPreset(val) {
+  if (!val) return; // "Custom tournament" selected — leave fields as-is
+  const p = MAJOR_PRESETS[val];
+  if (!p) return;
+  if (p.name) document.getElementById('f_name').value = p.name;
+  if (p.course) document.getElementById('f_course').value = p.course;
+  if (p.theme) document.getElementById('f_theme').value = p.theme;
+  if (p.par) document.getElementById('f_par').value = p.par;
+  if (p.cutLine) document.getElementById('f_cutLine').value = p.cutLine;
+  if (p.cutPenalty) document.getElementById('f_cutPenalty').value = p.cutPenalty;
+}
 const TOKEN_KEY = "majors_admin_token";
 
 let ADMIN_TOKEN = null;
@@ -741,6 +812,7 @@ document.getElementById('manualOrderBtn').onclick = () => {
 /* ===================== TOURNAMENT SETUP ===================== */
 document.getElementById('editTournamentBtn').onclick = () => {
   const t = STATE.tournament || {};
+  document.getElementById('f_major').value = t.major || '';
   document.getElementById('f_name').value = t.name || '';
   document.getElementById('f_course').value = t.course || '';
   document.getElementById('f_eventId').value = t.eventId || '';
@@ -761,6 +833,7 @@ document.getElementById('cancelSetupBtn').onclick = () => {
 };
 document.getElementById('saveSetupBtn').onclick = async () => {
   const t = STATE.tournament || { id: uid(), status: 'setup', picks: [], draftOrder: [] };
+  t.major = document.getElementById('f_major').value;
   t.name = document.getElementById('f_name').value.trim();
   t.course = document.getElementById('f_course').value.trim();
   t.eventId = document.getElementById('f_eventId').value.trim();
@@ -797,6 +870,28 @@ document.getElementById('markCompleteBtn').onclick = async () => {
   await saveTournament();
   render();
   toast('Marked complete');
+};
+document.getElementById('finalizeBtn').onclick = async () => {
+  if (!STATE.tournament) return toast('No active tournament', {error:true});
+  const statusEl = document.getElementById('finalizeStatus');
+  statusEl.textContent = 'Finalizing tournament...';
+  statusEl.style.color = 'var(--masters-yellow)';
+  try {
+    const r = await api('/admin/finalize', { method: 'POST' });
+    if (r.ok) {
+      statusEl.innerHTML = '✅ Tournament finalized! <strong>' + (r.archive?.winner || 'Winner') + '</strong> wins. Trophy room updated.';
+      statusEl.style.color = '#4ade80';
+      STATE.tournament.status = 'completed';
+      render();
+      toast('🏆 Tournament finalized!');
+    } else {
+      statusEl.textContent = '❌ Error: ' + (r.error || 'unknown');
+      statusEl.style.color = '#fb7185';
+    }
+  } catch (e) {
+    statusEl.textContent = '❌ ' + e.message;
+    statusEl.style.color = '#fb7185';
+  }
 };
 document.getElementById('archiveResetBtn').onclick = async () => {
   if (!STATE.tournament) return;
