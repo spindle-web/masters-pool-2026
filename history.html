@@ -558,6 +558,14 @@
     color: rgba(255,255,255,0.75);
     margin-top: 6px;
   }
+  .card-front .majors-won-list {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    margin-top: 8px;
+    line-height: 1.5;
+  }
   .card-front .big-stat {
     margin-top: auto;
     text-align: center;
@@ -593,6 +601,7 @@
   }
   .card-back {
     font-size: 13px;
+    overflow-y: auto;
   }
   .card-back .back-title {
     font-family: 'Playfair Display', serif;
@@ -831,7 +840,7 @@
     overflow: hidden;
   }
   .star-performer::before {
-    content: '★';
+    content: '\2605';
     position: absolute;
     top: -40px; right: -20px;
     font-size: 180px;
@@ -1056,6 +1065,71 @@
     transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  /* ============ COLLAPSIBLE TOURNAMENT SECTIONS ============ */
+  .tournament-section {
+    margin: 40px auto 0;
+    max-width: 1280px;
+    padding: 0 48px;
+  }
+  .tournament-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 28px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+    border: 1px solid rgba(249,224,118,0.15);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: border-color 0.3s, background 0.3s;
+    user-select: none;
+  }
+  .tournament-section-header:hover {
+    border-color: rgba(249,224,118,0.35);
+    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  }
+  .tournament-section-header .ts-left {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .tournament-section-header .ts-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    font-style: italic;
+    color: var(--cream);
+  }
+  .tournament-section-header .ts-winner {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 18px;
+    color: var(--cream-dim);
+  }
+  .tournament-section-header .ts-score {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: #4ade80;
+  }
+  .tournament-section-header .ts-chevron {
+    font-size: 20px;
+    color: var(--cream-dim);
+    transition: transform 0.3s;
+    flex-shrink: 0;
+    margin-left: 16px;
+  }
+  .tournament-section.open .ts-chevron {
+    transform: rotate(180deg);
+  }
+  .tournament-section-body {
+    display: none;
+    padding: 0;
+  }
+  .tournament-section.open .tournament-section-body {
+    display: block;
+  }
+
   /* ============ FOOTER ============ */
   footer {
     padding: 60px 48px;
@@ -1072,7 +1146,7 @@
   /* ============ RESPONSIVE ============ */
   @media (max-width: 960px) {
     .hero { padding: 24px 24px 60px; }
-    .shelf-wrap, .season, .players, .featured, .awards, .team-stats {
+    .shelf-wrap, .season, .players, .featured, .awards, .team-stats, .tournament-section {
       padding: 0 24px;
     }
     .shelf {
@@ -1089,6 +1163,8 @@
     .featured-header h2 .year { font-size: 36px; }
     .players-header h2 { font-size: 40px; }
     .award.wide { grid-column: span 1; }
+    .tournament-section-header .ts-name { font-size: 20px; }
+    .tournament-section-header { padding: 16px 20px; }
   }
 </style>
 </head>
@@ -1107,7 +1183,6 @@
   <section class="hero">
     <div class="eyebrow">Est. 2026</div>
     <h1>The Trophy<br/><span class="amp">&amp;</span> Record Room</h1>
-    <p class="tagline">A home for every major we chase. Champions carved in brass, rounds remembered forever, and scores that'll haunt somebody through next April.</p>
   </section>
 
   <!-- ============ TROPHY SHELF ============ -->
@@ -1147,51 +1222,29 @@
                 <stop offset="1" stop-color="#6a6f76"/>
               </radialGradient>
             </defs>
-
-            <!-- Finial (ornate top) -->
             <circle cx="120" cy="22" r="7" fill="url(#finialP)" stroke="#4a4f56" stroke-width="0.8"/>
             <rect x="117" y="28" width="6" height="8" fill="url(#silverRimP)"/>
-
-            <!-- Domed lid -->
             <path d="M 75 48 Q 120 28 165 48 L 165 56 L 75 56 Z" fill="url(#silverBodyP)" stroke="#4a4f56" stroke-width="1"/>
             <ellipse cx="120" cy="48" rx="45" ry="6" fill="#4a4f56" opacity="0.3"/>
-
-            <!-- Top rim ring -->
             <rect x="50" y="56" width="140" height="10" rx="2" fill="url(#silverRimP)" stroke="#4a4f56" stroke-width="1"/>
-
-            <!-- Massive bowl body -->
             <path d="M 50 66 Q 48 140 80 180 Q 100 194 120 196 Q 140 194 160 180 Q 192 140 190 66 Z"
                   fill="url(#silverBodyP)" stroke="#4a4f56" stroke-width="1.4"/>
-
-            <!-- Left ornate handle -->
             <path d="M 50 78 Q 18 82 14 118 Q 14 150 46 156" fill="none" stroke="url(#silverBodyP)" stroke-width="8" stroke-linecap="round"/>
             <path d="M 50 78 Q 18 82 14 118 Q 14 150 46 156" fill="none" stroke="#4a4f56" stroke-width="1.2" opacity="0.4"/>
-            <!-- Right ornate handle -->
             <path d="M 190 78 Q 222 82 226 118 Q 226 150 194 156" fill="none" stroke="url(#silverBodyP)" stroke-width="8" stroke-linecap="round"/>
             <path d="M 190 78 Q 222 82 226 118 Q 226 150 194 156" fill="none" stroke="#4a4f56" stroke-width="1.2" opacity="0.4"/>
-
-            <!-- Engraving band -->
             <rect x="58" y="96" width="124" height="34" fill="rgba(0,0,0,0.18)"/>
             <rect x="58" y="96" width="124" height="1.5" fill="#4a4f56" opacity="0.6"/>
             <rect x="58" y="128.5" width="124" height="1.5" fill="#4a4f56" opacity="0.6"/>
             <text x="120" y="114" font-family="Playfair Display" font-size="11" fill="#4a4f56" text-anchor="middle" font-weight="700" letter-spacing="2">WANAMAKER</text>
             <text x="120" y="124" font-family="Playfair Display" font-size="6" fill="#4a4f56" text-anchor="middle" letter-spacing="1.5">— PGA CHAMPIONSHIP —</text>
-
-            <!-- Decorative bands -->
             <ellipse cx="120" cy="145" rx="60" ry="4" fill="#4a4f56" opacity="0.25"/>
             <ellipse cx="120" cy="155" rx="55" ry="3" fill="#4a4f56" opacity="0.2"/>
-
-            <!-- Highlight sheen on bowl -->
             <ellipse cx="88" cy="110" rx="12" ry="40" fill="rgba(255,255,255,0.35)" opacity="0.6"/>
-
-            <!-- Stem -->
             <path d="M 100 196 L 140 196 L 135 216 L 105 216 Z" fill="url(#silverBodyP)" stroke="#4a4f56" stroke-width="1"/>
             <ellipse cx="120" cy="216" rx="18" ry="3" fill="#4a4f56"/>
-
-            <!-- Wood base (plinth) -->
             <path d="M 70 216 L 170 216 L 165 248 L 75 248 Z" fill="#3e2414" stroke="#1a0f08" stroke-width="1"/>
             <rect x="72" y="216" width="96" height="3" fill="#d4af37" opacity="0.4"/>
-            <!-- Gold nameplate -->
             <rect x="84" y="226" width="72" height="14" fill="#d4af37" opacity="0.5" stroke="#8a6d1f" stroke-width="0.5"/>
             <text x="120" y="236" font-family="Playfair Display" font-size="6" fill="#4a2c0f" text-anchor="middle" letter-spacing="1.5">2026</text>
           </svg>
@@ -1221,49 +1274,28 @@
                 <stop offset="1" stop-color="#8a8f96"/>
               </linearGradient>
             </defs>
-
-            <!-- Finial -->
             <circle cx="120" cy="28" r="5" fill="url(#silverBodyU)" stroke="#4a4f56"/>
             <rect x="118" y="32" width="4" height="6" fill="url(#silverBodyU)"/>
-
-            <!-- Domed lid -->
             <path d="M 75 52 Q 120 32 165 52 L 165 58 L 75 58 Z" fill="url(#silverBodyU)" stroke="#4a4f56" stroke-width="1"/>
-
-            <!-- Top rim (thick) -->
             <rect x="65" y="56" width="110" height="10" rx="1" fill="url(#silverBodyU)" stroke="#4a4f56" stroke-width="1"/>
             <ellipse cx="120" cy="58" rx="53" ry="3" fill="#2a2f36" opacity="0.5"/>
-
-            <!-- Tall cylindrical cup body -->
             <path d="M 70 66 L 70 180 Q 70 194 84 198 L 156 198 Q 170 194 170 180 L 170 66 Z"
                   fill="url(#silverBodyU)" stroke="#4a4f56" stroke-width="1.4"/>
-
-            <!-- Left twin-arch handle -->
             <path d="M 70 74 Q 36 80 30 118 Q 30 154 66 162" fill="none" stroke="url(#silverHandleU)" stroke-width="6" stroke-linecap="round"/>
             <circle cx="30" cy="118" r="4" fill="url(#silverHandleU)" stroke="#4a4f56" stroke-width="0.8"/>
-            <!-- Right twin-arch handle -->
             <path d="M 170 74 Q 204 80 210 118 Q 210 154 174 162" fill="none" stroke="url(#silverHandleU)" stroke-width="6" stroke-linecap="round"/>
             <circle cx="210" cy="118" r="4" fill="url(#silverHandleU)" stroke="#4a4f56" stroke-width="0.8"/>
-
-            <!-- Decorative bands around body -->
             <rect x="70" y="82" width="100" height="2" fill="#4a4f56" opacity="0.4"/>
             <rect x="70" y="86" width="100" height="1" fill="#4a4f56" opacity="0.3"/>
             <rect x="70" y="160" width="100" height="2" fill="#4a4f56" opacity="0.4"/>
             <rect x="70" y="164" width="100" height="1" fill="#4a4f56" opacity="0.3"/>
-
-            <!-- Engraving panel -->
             <rect x="74" y="108" width="92" height="42" fill="rgba(0,0,0,0.2)"/>
             <text x="120" y="126" font-family="Playfair Display" font-size="12" fill="#4a4f56" text-anchor="middle" font-weight="700" letter-spacing="2">U.S. OPEN</text>
             <text x="120" y="138" font-family="Playfair Display" font-size="6" fill="#4a4f56" text-anchor="middle" letter-spacing="1.5" font-style="italic">CHAMPIONSHIP</text>
             <text x="120" y="147" font-family="Playfair Display" font-size="5" fill="#4a4f56" text-anchor="middle" letter-spacing="1">USGA</text>
-
-            <!-- Sheen highlight -->
             <ellipse cx="88" cy="120" rx="8" ry="45" fill="rgba(255,255,255,0.4)" opacity="0.55"/>
-
-            <!-- Stem -->
             <path d="M 98 198 L 142 198 L 138 218 L 102 218 Z" fill="url(#silverBodyU)" stroke="#4a4f56" stroke-width="1"/>
             <ellipse cx="120" cy="218" rx="22" ry="3" fill="#4a4f56"/>
-
-            <!-- Base plinth -->
             <path d="M 64 218 L 176 218 L 170 252 L 70 252 Z" fill="#3e2414" stroke="#1a0f08" stroke-width="1"/>
             <rect x="66" y="218" width="108" height="3" fill="#c0c5cc" opacity="0.5"/>
             <rect x="82" y="228" width="76" height="14" fill="#d4af37" opacity="0.5" stroke="#8a6d1f" stroke-width="0.5"/>
@@ -1294,52 +1326,28 @@
                 <stop offset="1" stop-color="rgba(255,255,255,0)"/>
               </radialGradient>
             </defs>
-
-            <!-- Finial ball with spike -->
             <circle cx="120" cy="26" r="5" fill="url(#silverBodyO)" stroke="#4a4f56" stroke-width="0.8"/>
             <path d="M 120 18 L 120 28" stroke="#4a4f56" stroke-width="1.5"/>
             <ellipse cx="120" cy="22" rx="1.5" ry="1" fill="#e8ecf0"/>
-
-            <!-- Narrow neck -->
             <path d="M 100 36 Q 100 55 102 72 L 138 72 Q 140 55 140 36 Q 130 34 120 34 Q 110 34 100 36 Z"
                   fill="url(#silverBodyO)" stroke="#4a4f56" stroke-width="1"/>
             <ellipse cx="120" cy="36" rx="20" ry="3" fill="#4a4f56" opacity="0.35"/>
-
-            <!-- Spout (pouring lip) -->
             <path d="M 140 42 Q 158 46 162 60 Q 163 68 158 72 L 146 66 Q 148 58 142 54 Q 140 50 140 48 Z"
                   fill="url(#silverBodyO)" stroke="#4a4f56" stroke-width="1"/>
-            <!-- Spout shadow -->
             <path d="M 146 66 Q 148 58 142 54" fill="none" stroke="#4a4f56" stroke-width="0.8" opacity="0.6"/>
-
-            <!-- Decorative collar -->
             <rect x="96" y="72" width="48" height="6" rx="1" fill="url(#silverBodyO)" stroke="#4a4f56" stroke-width="0.8"/>
-
-            <!-- Bulbous body -->
             <ellipse cx="120" cy="140" rx="66" ry="60" fill="url(#silverBodyO)" stroke="#4a4f56" stroke-width="1.4"/>
-
-            <!-- Handle (ornate curved) -->
             <path d="M 56 104 Q 22 112 22 144 Q 22 176 54 184" fill="none" stroke="url(#silverBodyO)" stroke-width="8" stroke-linecap="round"/>
             <path d="M 56 104 Q 22 112 22 144 Q 22 176 54 184" fill="none" stroke="#4a4f56" stroke-width="1.2" opacity="0.4"/>
-
-            <!-- Decorative bands around widest part -->
             <ellipse cx="120" cy="108" rx="62" ry="5" fill="#4a4f56" opacity="0.22"/>
             <ellipse cx="120" cy="172" rx="62" ry="5" fill="#4a4f56" opacity="0.22"/>
-
-            <!-- Engraving (Champion Golfer of the Year) -->
             <text x="120" y="138" font-family="Playfair Display" font-size="8" fill="#4a4f56" text-anchor="middle" font-style="italic" letter-spacing="1" font-weight="600">CHAMPION GOLFER</text>
             <text x="120" y="150" font-family="Playfair Display" font-size="6" fill="#4a4f56" text-anchor="middle" opacity="0.75" letter-spacing="1.5">OF THE YEAR</text>
-            <!-- Decorative swash -->
             <path d="M 78 126 Q 120 122 162 126" fill="none" stroke="#4a4f56" stroke-width="0.5" opacity="0.5"/>
             <path d="M 78 158 Q 120 162 162 158" fill="none" stroke="#4a4f56" stroke-width="0.5" opacity="0.5"/>
-
-            <!-- Shine highlight on bulb -->
             <ellipse cx="92" cy="118" rx="14" ry="30" fill="url(#bulbShine)"/>
-
-            <!-- Stem -->
             <path d="M 102 200 L 138 200 L 135 222 L 105 222 Z" fill="url(#silverBodyO)" stroke="#4a4f56" stroke-width="1"/>
             <ellipse cx="120" cy="222" rx="18" ry="2.5" fill="#4a4f56"/>
-
-            <!-- Wood plinth -->
             <path d="M 72 222 L 168 222 L 162 254 L 78 254 Z" fill="#3e2414" stroke="#1a0f08" stroke-width="1"/>
             <rect x="74" y="222" width="92" height="3" fill="#c0c5cc" opacity="0.5"/>
             <rect x="88" y="232" width="64" height="14" fill="#d4af37" opacity="0.5" stroke="#8a6d1f" stroke-width="0.5"/>
@@ -1359,10 +1367,10 @@
   <section class="season">
     <div class="season-header">
       <h2>The Season<span class="year-num">2026</span></h2>
-      <span class="subtitle">Four crowns. Five teams. Two trophies claimed.</span>
+      <span class="subtitle">Four crowns. Five teams.</span>
     </div>
-    <div class="season-grid">
-      <div class="major-card completed" style="--event-color: #f9e076">
+    <div class="season-grid" id="season-grid">
+      <div class="major-card completed" data-major="masters" style="--event-color: #f9e076">
         <div class="month">April 9–12</div>
         <div class="name">The Masters</div>
         <div class="venue">Augusta National · Augusta, GA</div>
@@ -1373,10 +1381,10 @@
         <div class="winner-line">
           <span class="label">Pool Winner</span>
           <span class="name-line">Jepic</span>
-          <span class="score">−21</span>
+          <span class="score">&minus;21</span>
         </div>
       </div>
-      <div class="major-card completed" style="--event-color: #c9a961">
+      <div class="major-card completed" data-major="pga" style="--event-color: #c9a961">
         <div class="month">May 14–17</div>
         <div class="name">PGA Championship</div>
         <div class="venue">Aronimink · Newtown Square, PA</div>
@@ -1384,12 +1392,13 @@
           <span class="status-dot"></span>
           <span>Completed</span>
         </div>
-        <div class="winner-line">
+        <div class="winner-line" id="pga-winner-line">
           <span class="label">Pool Winner</span>
           <span class="name-line">Jepic</span>
+          <span class="score" id="pga-score"></span>
         </div>
       </div>
-      <div class="major-card" style="--event-color: #e8cf87">
+      <div class="major-card" data-major="usopen" style="--event-color: #e8cf87">
         <div class="month">June 18–21</div>
         <div class="name">U.S. Open</div>
         <div class="venue">Shinnecock Hills · Southampton, NY</div>
@@ -1398,7 +1407,7 @@
           <span>Upcoming</span>
         </div>
       </div>
-      <div class="major-card" style="--event-color: #d4af37">
+      <div class="major-card" data-major="open" style="--event-color: #d4af37">
         <div class="month">July 16–19</div>
         <div class="name">The Open</div>
         <div class="venue">Royal Birkdale · Southport, England</div>
@@ -1415,184 +1424,24 @@
     <div class="players-header">
       <div class="eyebrow">The Competitors</div>
       <h2>Hall of <em>Fame</em></h2>
-      <p class="desc">Five rivals, two trophies, and a lifetime of tee-to-green pettiness. Flip a card.</p>
+      <p class="desc">Five rivals, trophies to chase, and a lifetime of tee-to-green pettiness. Flip a card.</p>
     </div>
     <div class="cards-grid" id="player-cards">
       <!-- rendered by JS -->
     </div>
   </section>
 
-  <!-- ============ FEATURED MASTERS 2026 ============ -->
-  <section class="featured">
-    <div class="featured-header">
-      <div class="eyebrow">— 2026 Champion's Report —</div>
-      <h2>The Masters<span class="year">'26</span></h2>
-      <div class="venue-line">Augusta National Golf Club · April 9–12</div>
-    </div>
+  <!-- ============ TOURNAMENT HISTORY (collapsible, rendered by JS) ============ -->
+  <section id="tournament-history"></section>
 
-    <!-- Podium -->
-    <div class="podium">
-      <div class="podium-step" style="--podium-color: #c0c5cc">
-        <div class="medal">2</div>
-        <div class="place-label">Runner-up</div>
-        <div class="team">Tagan</div>
-        <div class="score">−12</div>
-        <div class="gap">9 strokes back</div>
-      </div>
-      <div class="podium-step first" style="--podium-color: #f9e076">
-        <div class="medal">1</div>
-        <div class="place-label">Champion</div>
-        <div class="team">Jepic</div>
-        <div class="score">−21</div>
-        <div class="gap">the green jacket fits</div>
-      </div>
-      <div class="podium-step" style="--podium-color: #cd7f32">
-        <div class="medal">3</div>
-        <div class="place-label">Third</div>
-        <div class="team">Bigra</div>
-        <div class="score">−7</div>
-        <div class="gap">14 strokes back</div>
-      </div>
-    </div>
-
-    <!-- Tournament detail -->
-    <div class="tournament-detail">
-      <div class="detail-card">
-        <h3>Full <span class="accent">Rosters &amp; Results</span></h3>
-        <ul class="roster-full" id="full-roster"></ul>
-      </div>
-
-      <div>
-        <div class="star-performer">
-          <div class="label">★ Star Performer ★</div>
-          <div class="star-name">Rory McIlroy</div>
-          <div class="star-team">Drafted by Bigra</div>
-          <div class="star-line">−12</div>
-          <div class="star-detail">67 · 65 · 73 · 71 · best tournament total</div>
-        </div>
-        <div class="detail-card">
-          <h3>The Three <span class="accent">65s</span></h3>
-          <p style="font-family: 'Cormorant Garamond', serif; font-style: italic; color: var(--cream-dim); margin-bottom: 16px; line-height: 1.5;">
-            Only three players posted a round in the low 60s at Augusta this year. All −7. All unforgettable.
-          </p>
-          <ul class="scorchers-list">
-            <li>
-              <span class="rank">I.</span>
-              <span>
-                <strong>Rory McIlroy</strong> <span class="tag" style="color: #f87171;">Bigra</span>
-              </span>
-              <span class="tag">R2</span>
-              <span class="score">65 · −7</span>
-            </li>
-            <li>
-              <span class="rank">II.</span>
-              <span>
-                <strong>Scottie Scheffler</strong> <span class="tag" style="color: #f9e076;">Tagan</span>
-              </span>
-              <span class="tag">R3</span>
-              <span class="score">65 · −7</span>
-            </li>
-            <li>
-              <span class="rank">III.</span>
-              <span>
-                <strong>Cameron Young</strong> <span class="tag" style="color: #4ade80;">Jepic</span>
-              </span>
-              <span class="tag">R3</span>
-              <span class="score">65 · −7</span>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ TEAM STATS BREAKDOWN ============ -->
-  <section class="team-stats">
-    <div class="featured-header" style="margin-bottom: 40px;">
-      <div class="eyebrow">By The Numbers</div>
-      <h2 style="font-size: 48px; font-weight: 700; font-style: italic;">Team <em>Dossiers</em></h2>
-    </div>
-    <div class="team-stats-grid" id="team-stats"></div>
-  </section>
-
-  <!-- ============ AWARDS ============ -->
+  <!-- ============ AWARDS / SUPERLATIVES ============ -->
   <section class="awards">
     <div class="awards-header">
       <div class="eyebrow">Superlatives</div>
-      <h2>The <em>Little</em> Awards</h2>
+      <h2>The <em>Awards</em></h2>
     </div>
-    <div class="awards-grid">
-      <div class="award">
-        <span class="emoji">🦅</span>
-        <div class="title">Eagle Eye</div>
-        <div class="subtitle">Most eagles by a single golfer</div>
-        <div class="winner">Tommy Fleetwood</div>
-        <div class="detail">Two eagles in one round (R2, holes 8 &amp; 15) — walked off with 68. Tagan rejoiced briefly.</div>
-      </div>
-
-      <div class="award">
-        <span class="emoji">💀</span>
-        <div class="title">Survived a Meltdown</div>
-        <div class="subtitle">Most doubles+ in a round</div>
-        <div class="winner">Bryson DeChambeau</div>
-        <div class="detail">Posted a +3 on R1 hole 11 and another +3 on R2 hole 18. The chainsaw stalled. Missed the cut.</div>
-      </div>
-
-      <div class="award">
-        <span class="emoji">🔥</span>
-        <div class="title">Hottest Single Round</div>
-        <div class="subtitle">Best drafted-golfer round of the week</div>
-        <div class="winner">Rory McIlroy · 65</div>
-        <div class="detail">A −7 Friday that set the tone for a wire-to-wire McIlroy charge. Bigra's only fireworks of the week.</div>
-      </div>
-
-      <div class="award">
-        <span class="emoji">📈</span>
-        <div class="title">Biggest Leaderboard Leap</div>
-        <div class="subtitle">Largest round-over-round move up</div>
-        <div class="winner">Scottie Scheffler</div>
-        <div class="detail">R2: 74 · R3: 65. Nine strokes found. Moved from unremarkable to Sunday threat in eighteen holes.</div>
-      </div>
-
-      <div class="award">
-        <span class="emoji">🎢</span>
-        <div class="title">The Pendulum</div>
-        <div class="subtitle">Swingiest golfer, round to round</div>
-        <div class="winner">Jon Rahm</div>
-        <div class="detail">78 · 70 · 73 · 68. Could not decide if he was trying. Finished +1 for Tagan and nearly gave anyone a heart attack.</div>
-      </div>
-
-      <div class="award">
-        <span class="emoji">⛏️</span>
-        <div class="title">The Grinder</div>
-        <div class="subtitle">Most consistent drafted golfer</div>
-        <div class="winner">Justin Rose</div>
-        <div class="detail">70 · 69 · 69 · 70. Four rounds, one-stroke spread, −10 total. A masterclass in refusing to be interesting.</div>
-      </div>
-
-      <div class="award">
-        <span class="emoji">🪓</span>
-        <div class="title">Casualties of the Cut</div>
-        <div class="subtitle">Drafted golfers who didn't see the weekend</div>
-        <div class="winner">3 Missed</div>
-        <div class="detail">Akshay Bhatia (Tagan), Bryson DeChambeau (Jepic), Min Woo Lee (Bigra). Each cost their team six shots.</div>
-      </div>
-
-      <div class="award">
-        <span class="emoji">🏌️</span>
-        <div class="title">The Weekend Warrior</div>
-        <div class="subtitle">Lowest combined R3+R4</div>
-        <div class="winner">Cameron Young · 138</div>
-        <div class="detail">65 · 73 on the weekend, piggy-backing Jepic's runaway win. A quiet assassin.</div>
-      </div>
-
-      <div class="award">
-        <span class="emoji">🏆</span>
-        <div class="title">Pool MVP</div>
-        <div class="subtitle">Most strokes under par for their team</div>
-        <div class="winner">Rory McIlroy</div>
-        <div class="detail">Twelve under at Augusta, single-handedly dragging Bigra off the floor. The rest of the roster shot +5 combined.</div>
-      </div>
+    <div class="awards-grid" id="awards-grid">
+      <!-- rendered by JS -->
     </div>
   </section>
 
@@ -1602,191 +1451,9 @@
 </main>
 
 <script>
-  // ============ DATA ============
-  const TEAMS = [
-    {
-      name: 'Tagan',
-      color: '#f9e076',
-      emoji: '👑',
-      subtitle: 'Yellow & proud',
-      stats: {
-        mastersFinish: '2nd (−12)',
-        bestGolfer: 'Scottie Scheffler (−11)',
-        lowRound: '65 (Scheffler, R3)',
-        titles: 0,
-        majorsPlayed: 2
-      },
-      h2h: { Jepic: '0-2', Bigra: '1-0' }
-    },
-    {
-      name: 'Jepic',
-      color: '#4ade80',
-      emoji: '🟢',
-      subtitle: '2× Major Champion',
-      stats: {
-        mastersFinish: '1st (−21) 🏆',
-        bestGolfer: 'Cameron Young (−10)',
-        lowRound: '65 (Young, R3)',
-        titles: 2,
-        majorsPlayed: 2
-      },
-      h2h: { Tagan: '2-0', Bigra: '2-0' }
-    },
-    {
-      name: 'Bigra',
-      color: '#f87171',
-      emoji: '🔴',
-      subtitle: 'Rory-or-bust',
-      stats: {
-        mastersFinish: '3rd (−7)',
-        bestGolfer: 'Rory McIlroy (−12)',
-        lowRound: '65 (McIlroy, R2)',
-        titles: 0,
-        majorsPlayed: 2
-      },
-      h2h: { Tagan: '0-1', Jepic: '0-2' }
-    },
-    {
-      name: 'Max',
-      color: '#60a5fa',
-      emoji: '🔵',
-      subtitle: 'The newcomer',
-      stats: {
-        mastersFinish: '—',
-        bestGolfer: 'TBD',
-        lowRound: 'TBD',
-        titles: 0,
-        majorsPlayed: 1
-      },
-      h2h: { Coletti: 'TBD' }
-    },
-    {
-      name: 'Coletti',
-      color: '#a78bfa',
-      emoji: '🟣',
-      subtitle: 'Under the microscope',
-      stats: {
-        mastersFinish: '—',
-        bestGolfer: 'TBD',
-        lowRound: 'TBD',
-        titles: 0,
-        majorsPlayed: 1
-      },
-      h2h: { Max: 'TBD' }
-    }
-  ];
-
-  const FULL_ROSTER = [
-    { name: 'Rory McIlroy', team: 'Bigra', score: -12, rounds: '67·65·73·71' },
-    { name: 'Scottie Scheffler', team: 'Tagan', score: -11, rounds: '70·74·65·68' },
-    { name: 'Justin Rose', team: 'Tagan', score: -10, rounds: '70·69·69·70' },
-    { name: 'Cameron Young', team: 'Jepic', score: -10, rounds: '73·67·65·73' },
-    { name: 'Collin Morikawa', team: 'Bigra', score: -9, rounds: '74·69·68·68' },
-    { name: 'Xander Schauffele', team: 'Jepic', score: -8, rounds: '70·72·70·68' },
-    { name: 'Jordan Spieth', team: 'Jepic', score: -5, rounds: '72·73·70·68' },
-    { name: 'Patrick Reed', team: 'Jepic', score: -5, rounds: '69·69·72·73' },
-    { name: 'Brooks Koepka', team: 'Jepic', score: -5, rounds: '72·69·71·71' },
-    { name: 'Matt Fitzpatrick', team: 'Tagan', score: -4, rounds: '74·69·70·71' },
-    { name: 'Viktor Hovland', team: 'Bigra', score: -4, rounds: '75·71·71·67' },
-    { name: 'Ludvig Åberg', team: 'Bigra', score: -3, rounds: '74·70·69·72' },
-    { name: 'Tommy Fleetwood', team: 'Tagan', score: 0, rounds: '71·68·73·76' },
-    { name: 'Jon Rahm', team: 'Tagan', score: 1, rounds: '78·70·73·68' },
-    { name: 'Si Woo Kim', team: 'Bigra', score: 4, rounds: '75·73·72·72' },
-    { name: 'Akshay Bhatia', team: 'Tagan', score: 6, rounds: 'missed cut', cut: true },
-    { name: 'Bryson DeChambeau', team: 'Jepic', score: 6, rounds: 'missed cut', cut: true },
-    { name: 'Min Woo Lee', team: 'Bigra', score: 11, rounds: 'missed cut', cut: true }
-  ];
-
-  // ============ RENDER PLAYER CARDS ============
-  function fmtScore(n) {
-    if (n === 0) return 'E';
-    return (n > 0 ? '+' : '') + n;
-  }
-  const TEAM_COLORS = { Tagan: '#f9e076', Jepic: '#4ade80', Bigra: '#f87171', Max: '#60a5fa', Coletti: '#a78bfa' };
-
-  function renderPlayerCards() {
-    const grid = document.getElementById('player-cards');
-    grid.innerHTML = TEAMS.map((t) => {
-      const titleCount = t.stats.titles || 0;
-      const rank = titleCount >= 2 ? `${titleCount}× Champion` : titleCount === 1 ? 'Champion' : 'Contender';
-      const opponentList = Object.entries(t.h2h)
-        .map(([opp, res]) => `
-          <div class="h2h-row">
-            <span class="opp">vs ${opp}</span>
-            <span>${res}</span>
-          </div>
-        `).join('');
-      return `
-        <div class="player-card" style="--card-color: ${t.color};" onclick="this.classList.toggle('flipped')">
-          <div class="card-face card-front">
-            <div class="rank-badge">${rank}</div>
-            <div>
-              <div style="font-size: 11px; letter-spacing: 3px; text-transform: uppercase; opacity: 0.7; color: #fff;">Team</div>
-              <div class="team-name">${t.name}</div>
-              <div class="team-subtitle">${t.subtitle}</div>
-            </div>
-            <div class="big-stat">
-              <div class="num">${titleCount}</div>
-              <div class="label">Title${titleCount !== 1 ? 's' : ''} · ${t.stats.majorsPlayed || 0} Major${(t.stats.majorsPlayed||0) !== 1 ? 's' : ''} Played</div>
-            </div>
-            <div class="flip-hint">✦ tap to flip ✦</div>
-          </div>
-          <div class="card-face card-back">
-            <div class="back-title">${t.name}</div>
-            <div class="back-subtitle">Career · ${t.stats.majorsPlayed || 0} Majors</div>
-            ${t.stats.mastersFinish !== '—' ? `<div class="stat-row"><span class="lbl">Masters '26</span><span class="val">${t.stats.mastersFinish}</span></div>` : ''}
-            <div class="stat-row"><span class="lbl">Best Pick</span><span class="val" style="font-size: 13px;">${t.stats.bestGolfer}</span></div>
-            <div class="stat-row"><span class="lbl">Low Round</span><span class="val">${t.stats.lowRound}</span></div>
-            <div class="h2h-matrix">
-              <div class="lbl">Head-to-Head</div>
-              ${opponentList}
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  function renderFullRoster() {
-    const ul = document.getElementById('full-roster');
-    ul.innerHTML = FULL_ROSTER.map(g => `
-      <li>
-        <span class="golfer-name ${g.cut ? 'cut' : ''}">${g.name}</span>
-        <span class="team-badge ${g.team.toLowerCase()}">${g.team}</span>
-        <span class="score" style="color: ${g.score <= 0 ? '#4ade80' : '#fb7185'};">
-          ${g.cut ? 'MC' : fmtScore(g.score)}
-        </span>
-      </li>
-    `).join('');
-  }
-
-  function renderTeamStats() {
-    // Team stats section is now populated dynamically from archives
-    const grid = document.getElementById('team-stats');
-    grid.innerHTML = '';
-  }
-
-  // ============ TROPHY THEME SWITCHING ============
-  document.querySelectorAll('.trophy').forEach(trophy => {
-    const theme = trophy.dataset.theme;
-    trophy.addEventListener('mouseenter', () => {
-      document.body.className = `theme-${theme}`;
-    });
-    trophy.addEventListener('mouseleave', () => {
-      document.body.className = 'theme-masters';
-    });
-  });
-  // Default theme
-  document.body.className = 'theme-masters';
-
-  // ============ INIT ============
-  renderPlayerCards();
-  renderFullRoster();
-  // Render team stats after a tick so bars animate in
-  setTimeout(renderTeamStats, 150);
-
-  // ============ DYNAMIC: PAST TOURNAMENT HISTORY ============
+  // ============ CONSTANTS ============
   const WORKER_URL = "https://masters-pool-notifier.spindle-web.workers.dev";
+
   const THEME_COLORS = {
     masters: { accent: '#f9e076', bg: 'rgba(11,59,42,0.15)' },
     pga: { accent: '#c9a961', bg: 'rgba(25,55,97,0.15)' },
@@ -1794,23 +1461,101 @@
     open: { accent: '#d4af37', bg: 'rgba(12,35,64,0.15)' }
   };
 
+  const MAJOR_NAMES = {
+    masters: 'The Masters',
+    pga: 'PGA Championship',
+    usopen: 'U.S. Open',
+    open: 'The Open'
+  };
+
+  // ============ MASTERS FALLBACK ============
+  const MASTERS_FALLBACK = {
+    id: 'masters-2026',
+    name: 'The Masters 2026',
+    course: 'Augusta National Golf Club',
+    major: 'masters',
+    theme: 'masters',
+    par: 72,
+    winner: 'Jepic',
+    teamResults: [
+      {
+        name: 'Jepic', toPar: -21, placement: 1,
+        golfers: [
+          { name: 'Cameron Young', roundStrokes: [73,67,65,73], toPar: -10, isCut: false },
+          { name: 'Xander Schauffele', roundStrokes: [70,72,70,68], toPar: -8, isCut: false },
+          { name: 'Jordan Spieth', roundStrokes: [72,73,70,68], toPar: -5, isCut: false },
+          { name: 'Patrick Reed', roundStrokes: [69,69,72,73], toPar: -5, isCut: false },
+          { name: 'Brooks Koepka', roundStrokes: [72,69,71,71], toPar: -5, isCut: false },
+          { name: 'Bryson DeChambeau', roundStrokes: [null,null,null,null], toPar: 6, isCut: true }
+        ]
+      },
+      {
+        name: 'Tagan', toPar: -12, placement: 2,
+        golfers: [
+          { name: 'Scottie Scheffler', roundStrokes: [70,74,65,68], toPar: -11, isCut: false },
+          { name: 'Justin Rose', roundStrokes: [70,69,69,70], toPar: -10, isCut: false },
+          { name: 'Matt Fitzpatrick', roundStrokes: [74,69,70,71], toPar: -4, isCut: false },
+          { name: 'Tommy Fleetwood', roundStrokes: [71,68,73,76], toPar: 0, isCut: false },
+          { name: 'Jon Rahm', roundStrokes: [78,70,73,68], toPar: 1, isCut: false },
+          { name: 'Akshay Bhatia', roundStrokes: [null,null,null,null], toPar: 6, isCut: true }
+        ]
+      },
+      {
+        name: 'Bigra', toPar: -7, placement: 3,
+        golfers: [
+          { name: 'Rory McIlroy', roundStrokes: [67,65,73,71], toPar: -12, isCut: false },
+          { name: 'Collin Morikawa', roundStrokes: [74,69,68,68], toPar: -9, isCut: false },
+          { name: 'Viktor Hovland', roundStrokes: [75,71,71,67], toPar: -4, isCut: false },
+          { name: 'Ludvig Åberg', roundStrokes: [74,70,69,72], toPar: -3, isCut: false },
+          { name: 'Si Woo Kim', roundStrokes: [75,73,72,72], toPar: 4, isCut: false },
+          { name: 'Min Woo Lee', roundStrokes: [null,null,null,null], toPar: 11, isCut: true }
+        ]
+      }
+    ],
+    standings: [
+      { name: 'Jepic', toPar: -21, placement: 1 },
+      { name: 'Tagan', toPar: -12, placement: 2 },
+      { name: 'Bigra', toPar: -7, placement: 3 }
+    ]
+  };
+
+  // ============ HELPERS ============
   function fmtToPar(n) {
     if (n == null) return '—';
     if (n === 0) return 'E';
     return n > 0 ? '+' + n : String(n);
   }
 
+  function ordinal(n) {
+    const s = ['th','st','nd','rd'];
+    const v = n % 100;
+    return n + (s[(v-20)%10] || s[v] || s[0]);
+  }
+
+  function shortMajorName(name, major) {
+    if (major === 'masters') return "Masters";
+    if (major === 'pga') return "PGA";
+    if (major === 'usopen') return "U.S. Open";
+    if (major === 'open') return "The Open";
+    return name || 'Tournament';
+  }
+
+  function extractYear(archive) {
+    const m = (archive.name || archive.id || '').match(/20\d{2}/);
+    return m ? "'" + m[0].slice(2) : '';
+  }
+
+  // ============ RENDER COLLAPSIBLE TOURNAMENT ============
   function renderTournamentDetail(a) {
     const theme = THEME_COLORS[a.major || a.theme] || THEME_COLORS.masters;
-    const results = a.teamResults || a.standings || [];
+    const results = a.teamResults || [];
     if (!results.length) return '';
 
-    // Podium (top 3)
+    const TEAM_COLORS = window._TEAM_COLORS || {};
     const podiumColors = ['#f9e076', '#c0c5cc', '#cd7f32'];
     const podiumLabels = ['Champion', 'Runner-up', 'Third'];
     const podium = results.slice(0, 3);
 
-    // Build golfer table for each team
     const teamSections = results.map((team, idx) => {
       const golfers = (team.golfers || []).map(g => {
         const rounds = (g.roundStrokes || []).map(r => r != null ? r : '—').join(' · ');
@@ -1818,8 +1563,8 @@
         return `
           <li style="display:grid;grid-template-columns:1fr auto auto;gap:12px;padding:8px 0;border-bottom:1px dashed rgba(249,224,118,0.08);font-size:14px;align-items:baseline;">
             <span style="${g.isCut ? 'text-decoration:line-through;opacity:0.5;' : ''}">${g.name}${cutLabel}</span>
-            <span style="color:var(--cream-dim);font-size:12px;">${rounds}</span>
-            <span style="font-family:'Playfair Display',serif;font-weight:600;color:${(g.toPar||0) <= 0 ? '#4ade80' : '#fb7185'};min-width:40px;text-align:right;">${fmtToPar(g.toPar)}</span>
+            <span style="color:var(--cream-dim);font-size:12px;">${g.isCut ? '' : rounds}</span>
+            <span style="font-family:'Playfair Display',serif;font-weight:600;color:${(g.toPar||0) <= 0 ? '#4ade80' : '#fb7185'};min-width:40px;text-align:right;">${g.isCut ? 'MC' : fmtToPar(g.toPar)}</span>
           </li>
         `;
       }).join('');
@@ -1839,85 +1584,520 @@
       `;
     }).join('');
 
+    // Build podium HTML
+    let podiumHTML = '';
+    if (podium.length >= 3) {
+      podiumHTML = `
+        <div class="podium-step" style="--podium-color: ${podiumColors[1]}">
+          <div class="medal">2</div>
+          <div class="place-label">${podiumLabels[1]}</div>
+          <div class="team">${podium[1].name}</div>
+          <div class="score">${fmtToPar(podium[1].toPar)}</div>
+          <div class="gap">${podium[1].toPar - podium[0].toPar > 0 ? (podium[1].toPar - podium[0].toPar) + ' strokes back' : 'tied'}</div>
+        </div>
+        <div class="podium-step first" style="--podium-color: ${podiumColors[0]}">
+          <div class="medal">1</div>
+          <div class="place-label">${podiumLabels[0]}</div>
+          <div class="team">${podium[0].name}</div>
+          <div class="score">${fmtToPar(podium[0].toPar)}</div>
+          <div class="gap">${a.winner ? 'the trophy is theirs' : ''}</div>
+        </div>
+        <div class="podium-step" style="--podium-color: ${podiumColors[2]}">
+          <div class="medal">3</div>
+          <div class="place-label">${podiumLabels[2]}</div>
+          <div class="team">${podium[2].name}</div>
+          <div class="score">${fmtToPar(podium[2].toPar)}</div>
+          <div class="gap">${podium[2].toPar - podium[0].toPar > 0 ? (podium[2].toPar - podium[0].toPar) + ' strokes back' : 'tied'}</div>
+        </div>
+      `;
+    } else {
+      podiumHTML = podium.map((p, i) => `
+        <div class="podium-step ${i === 0 ? 'first' : ''}" style="--podium-color: ${podiumColors[i]}">
+          <div class="medal">${i + 1}</div>
+          <div class="team">${p.name}</div>
+          <div class="score">${fmtToPar(p.toPar)}</div>
+        </div>
+      `).join('');
+    }
+
     return `
-      <section class="featured" id="tourney-${a.id || ''}">
-        <div class="featured-header">
-          <div class="eyebrow">— ${a.winner ? a.winner + "'s Victory" : 'Tournament Report'} —</div>
-          <h2>${a.name || 'Tournament'}</h2>
-          <div class="venue-line">${a.course || ''}</div>
-        </div>
-
-        <div class="podium">
-          ${podium.length >= 3 ? `
-            <div class="podium-step" style="--podium-color: ${podiumColors[1]}">
-              <div class="medal">2</div>
-              <div class="place-label">${podiumLabels[1]}</div>
-              <div class="team">${podium[1].name}</div>
-              <div class="score">${fmtToPar(podium[1].toPar)}</div>
-              <div class="gap">${podium[1].toPar - podium[0].toPar > 0 ? (podium[1].toPar - podium[0].toPar) + ' strokes back' : 'tied'}</div>
-            </div>
-            <div class="podium-step first" style="--podium-color: ${podiumColors[0]}">
-              <div class="medal">1</div>
-              <div class="place-label">${podiumLabels[0]}</div>
-              <div class="team">${podium[0].name}</div>
-              <div class="score">${fmtToPar(podium[0].toPar)}</div>
-              <div class="gap">${a.winner ? 'the trophy is theirs' : ''}</div>
-            </div>
-            <div class="podium-step" style="--podium-color: ${podiumColors[2]}">
-              <div class="medal">3</div>
-              <div class="place-label">${podiumLabels[2]}</div>
-              <div class="team">${podium[2].name}</div>
-              <div class="score">${fmtToPar(podium[2].toPar)}</div>
-              <div class="gap">${podium[2].toPar - podium[0].toPar > 0 ? (podium[2].toPar - podium[0].toPar) + ' strokes back' : 'tied'}</div>
-            </div>
-          ` : podium.map((p, i) => `
-            <div class="podium-step ${i === 0 ? 'first' : ''}" style="--podium-color: ${podiumColors[i]}">
-              <div class="medal">${i + 1}</div>
-              <div class="team">${p.name}</div>
-              <div class="score">${fmtToPar(p.toPar)}</div>
-            </div>
-          `).join('')}
-        </div>
-
-        <div style="max-width:800px;margin:40px auto 0;">
-          <h3 style="font-family:'Playfair Display',serif;font-size:24px;font-style:italic;color:var(--cream);margin-bottom:20px;">Full <span style="color:${theme.accent};">Results</span></h3>
-          ${teamSections}
-        </div>
-      </section>
+      <div class="featured-header" style="margin-top:40px;">
+        <div class="eyebrow">— ${a.winner ? a.winner + "'s Victory" : 'Tournament Report'} —</div>
+        <h2>${a.name || 'Tournament'}</h2>
+        <div class="venue-line">${a.course || ''}</div>
+      </div>
+      <div class="podium">${podiumHTML}</div>
+      <div style="max-width:800px;margin:40px auto 0;">
+        <h3 style="font-family:'Playfair Display',serif;font-size:24px;font-style:italic;color:var(--cream);margin-bottom:20px;">Full <span style="color:${theme.accent};">Results</span></h3>
+        ${teamSections}
+      </div>
     `;
   }
 
-  function ordinal(n) {
-    const s = ['th','st','nd','rd'];
-    const v = n % 100;
-    return n + (s[(v-20)%10] || s[v] || s[0]);
+  // ============ RENDER PLAYER CARDS (dynamic from archives) ============
+  function renderPlayerCards(archives, playerConfig) {
+    const TEAM_COLORS = window._TEAM_COLORS || {};
+    const grid = document.getElementById('player-cards');
+
+    // Build player data from archives
+    const playerNames = Object.keys(TEAM_COLORS);
+    const playerData = {};
+
+    playerNames.forEach(name => {
+      playerData[name] = {
+        name,
+        color: TEAM_COLORS[name],
+        titles: 0,
+        majorsPlayed: 0,
+        majorResults: [], // { name, year, placement, toPar }
+        h2h: {},
+        totalPlacement: 0,
+        titleList: []
+      };
+      // Init h2h vs everyone else
+      playerNames.forEach(opp => {
+        if (opp !== name) playerData[name].h2h[opp] = { wins: 0, losses: 0 };
+      });
+    });
+
+    archives.forEach(a => {
+      const results = a.teamResults || a.standings || [];
+      if (!results.length) return;
+
+      const majorKey = a.major || a.theme || '';
+      const yearStr = extractYear(a);
+      const shortName = shortMajorName(a.name, majorKey);
+
+      // Find who participated
+      const participated = results.map(r => r.name).filter(n => playerData[n]);
+
+      participated.forEach(pName => {
+        const entry = results.find(r => r.name === pName);
+        if (!entry) return;
+        const pd = playerData[pName];
+        pd.majorsPlayed++;
+        const placement = entry.placement || (results.indexOf(entry) + 1);
+        pd.totalPlacement += placement;
+        pd.majorResults.push({
+          label: shortName + ' ' + yearStr,
+          placement,
+          toPar: entry.toPar
+        });
+        if (placement === 1) {
+          pd.titles++;
+          pd.titleList.push(shortName + ' ' + yearStr);
+        }
+      });
+
+      // h2h: compare placements among participants
+      for (let i = 0; i < participated.length; i++) {
+        for (let j = i + 1; j < participated.length; j++) {
+          const a1 = participated[i], a2 = participated[j];
+          const r1 = results.find(r => r.name === a1);
+          const r2 = results.find(r => r.name === a2);
+          if (!r1 || !r2) continue;
+          const p1 = r1.placement || (results.indexOf(r1) + 1);
+          const p2 = r2.placement || (results.indexOf(r2) + 1);
+          if (p1 < p2) {
+            if (playerData[a1]) playerData[a1].h2h[a2].wins++;
+            if (playerData[a2]) playerData[a2].h2h[a1].losses++;
+          } else if (p2 < p1) {
+            if (playerData[a2]) playerData[a2].h2h[a1].wins++;
+            if (playerData[a1]) playerData[a1].h2h[a2].losses++;
+          }
+        }
+      }
+    });
+
+    // Subtitles
+    function getSubtitle(pd) {
+      if (pd.titles >= 2) return pd.titles + '× Major Champion';
+      if (pd.titles === 1) return 'Major Champion';
+      if (pd.majorsPlayed === 0) return 'Awaiting debut';
+      return 'Contender';
+    }
+
+    // Render cards sorted by titles desc, then avg placement
+    const sorted = playerNames.map(n => playerData[n]).sort((a, b) => {
+      if (b.titles !== a.titles) return b.titles - a.titles;
+      const avgA = a.majorsPlayed ? a.totalPlacement / a.majorsPlayed : 999;
+      const avgB = b.majorsPlayed ? b.totalPlacement / b.majorsPlayed : 999;
+      return avgA - avgB;
+    });
+
+    grid.innerHTML = sorted.map(pd => {
+      const rank = pd.titles >= 2 ? pd.titles + '× Champion' : pd.titles === 1 ? 'Champion' : 'Contender';
+      const majorsWonStr = pd.titleList.length ? pd.titleList.join(', ') : '';
+
+      // Back: results at each major
+      const resultRows = pd.majorResults.map(mr => `
+        <div class="stat-row">
+          <span class="lbl">${mr.label}</span>
+          <span class="val" style="font-size:13px;">${ordinal(mr.placement)} (${fmtToPar(mr.toPar)})</span>
+        </div>
+      `).join('');
+
+      // Career stats
+      const avgFinish = pd.majorsPlayed ? (pd.totalPlacement / pd.majorsPlayed).toFixed(1) : '—';
+      const bestFinish = pd.majorResults.length ? ordinal(Math.min(...pd.majorResults.map(r => r.placement))) : '—';
+
+      // H2H
+      const h2hRows = Object.entries(pd.h2h)
+        .filter(([opp]) => playerData[opp] && (pd.h2h[opp].wins + pd.h2h[opp].losses > 0))
+        .map(([opp, rec]) => {
+          const cls = rec.wins > rec.losses ? 'win' : rec.losses > rec.wins ? 'loss' : '';
+          return `
+            <div class="h2h-row">
+              <span class="opp">vs ${opp}</span>
+              <span class="${cls}">${rec.wins}-${rec.losses}</span>
+            </div>
+          `;
+        }).join('');
+
+      // Also show opponents with no shared tournaments as TBD
+      const h2hTBD = Object.entries(pd.h2h)
+        .filter(([opp]) => playerData[opp] && (pd.h2h[opp].wins + pd.h2h[opp].losses === 0))
+        .map(([opp]) => `
+          <div class="h2h-row">
+            <span class="opp">vs ${opp}</span>
+            <span style="opacity:0.4;">TBD</span>
+          </div>
+        `).join('');
+
+      return `
+        <div class="player-card" style="--card-color: ${pd.color};" onclick="this.classList.toggle('flipped')">
+          <div class="card-face card-front">
+            <div class="rank-badge">${rank}</div>
+            <div>
+              <div style="font-size: 11px; letter-spacing: 3px; text-transform: uppercase; opacity: 0.7; color: #fff;">Team</div>
+              <div class="team-name">${pd.name}</div>
+              <div class="team-subtitle">${getSubtitle(pd)}</div>
+              ${majorsWonStr ? `<div class="majors-won-list">${majorsWonStr}</div>` : ''}
+            </div>
+            <div class="big-stat">
+              <div class="num">${pd.titles}</div>
+              <div class="label">Title${pd.titles !== 1 ? 's' : ''} · ${pd.majorsPlayed} Major${pd.majorsPlayed !== 1 ? 's' : ''} Played</div>
+            </div>
+            <div class="flip-hint">✦ tap to flip ✦</div>
+          </div>
+          <div class="card-face card-back">
+            <div class="back-title">${pd.name}</div>
+            <div class="back-subtitle">Career · ${pd.majorsPlayed} Major${pd.majorsPlayed !== 1 ? 's' : ''}</div>
+            ${resultRows}
+            <div class="stat-row"><span class="lbl">Avg Finish</span><span class="val">${avgFinish}</span></div>
+            <div class="stat-row"><span class="lbl">Best Finish</span><span class="val">${bestFinish}</span></div>
+            ${(h2hRows || h2hTBD) ? `
+              <div class="h2h-matrix">
+                <div class="lbl">Head-to-Head</div>
+                ${h2hRows}${h2hTBD}
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 
-  (async function loadArchives() {
-    try {
-      const r = await fetch(WORKER_URL + '/archives');
-      if (!r.ok) return;
-      const j = await r.json();
-      const archives = (j.archives || []).filter(a => a && a.id);
+  // ============ RENDER COLLAPSIBLE TOURNAMENT SECTIONS ============
+  function renderTournamentHistory(archives) {
+    const container = document.getElementById('tournament-history');
+    if (!archives.length) { container.innerHTML = ''; return; }
 
-      if (!archives.length) return;
+    container.innerHTML = `
+      <div style="max-width:1280px;margin:120px auto 0;padding:0 48px;">
+        <div class="featured-header">
+          <div class="eyebrow">The Archives</div>
+          <h2>Tournament <em>History</em></h2>
+        </div>
+      </div>
+    ` + archives.map(a => {
+      const results = a.teamResults || a.standings || [];
+      const winner = a.winner || (results[0] ? results[0].name : '?');
+      const winScore = results[0] ? fmtToPar(results[0].toPar) : '';
+      const id = a.id || Math.random().toString(36).slice(2);
 
-      // Insert detailed tournament sections before the awards
-      const awardsSection = document.querySelector('.awards');
-      const container = document.createElement('div');
+      return `
+        <div class="tournament-section" id="ts-${id}">
+          <div class="tournament-section-header" onclick="this.parentElement.classList.toggle('open')">
+            <div class="ts-left">
+              <span class="ts-name">${a.name || 'Tournament'}</span>
+              <span class="ts-winner">Won by ${winner}</span>
+              <span class="ts-score">${winScore}</span>
+            </div>
+            <span class="ts-chevron">▼</span>
+          </div>
+          <div class="tournament-section-body">
+            ${renderTournamentDetail(a)}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
 
-      // Sort by date (most recent first, but after the hardcoded Masters)
-      archives
-        .filter(a => a.teamResults || a.standings) // only show tournaments with detailed data
-        .reverse()
-        .forEach(a => {
-          container.innerHTML += renderTournamentDetail(a);
+  // ============ COMPUTE & RENDER SUPERLATIVES ============
+  function renderSuperlatives(archives) {
+    const grid = document.getElementById('awards-grid');
+    if (!archives.length) { grid.innerHTML = '<p style="color:var(--cream-dim);font-style:italic;">No tournament data available yet.</p>'; return; }
+
+    const TEAM_COLORS = window._TEAM_COLORS || {};
+    const awards = [];
+
+    // Gather all data
+    const teamWins = {};   // name -> count
+    const teamToParByTourney = []; // { name, toPar, tourney }
+    const teamPlacements = {}; // name -> [placement, ...]
+    let allRounds = [];    // { golferName, teamName, score, roundNum, tourney }
+    let allGolferToPar = []; // { golferName, teamName, toPar, tourney, isCut }
+    let cutCount = 0;
+    const golferRounds = {}; // golferName -> [score, ...]
+
+    archives.forEach(a => {
+      const results = a.teamResults || [];
+      const majorLabel = (a.name || '').replace(/\s*20\d{2}/, '');
+      const yearStr = extractYear(a);
+      const tourneyLabel = majorLabel + ' ' + yearStr;
+
+      results.forEach((team, idx) => {
+        const placement = team.placement || (idx + 1);
+        if (placement === 1) {
+          teamWins[team.name] = (teamWins[team.name] || 0) + 1;
+        }
+        if (!teamPlacements[team.name]) teamPlacements[team.name] = [];
+        teamPlacements[team.name].push(placement);
+
+        teamToParByTourney.push({ name: team.name, toPar: team.toPar, tourney: tourneyLabel });
+
+        (team.golfers || []).forEach(g => {
+          allGolferToPar.push({ golferName: g.name, teamName: team.name, toPar: g.toPar, tourney: tourneyLabel, isCut: g.isCut });
+          if (g.isCut) { cutCount++; return; }
+          if (!golferRounds[g.name]) golferRounds[g.name] = [];
+          (g.roundStrokes || []).forEach((score, ri) => {
+            if (score != null) {
+              allRounds.push({ golferName: g.name, teamName: team.name, score, roundNum: ri + 1, tourney: tourneyLabel });
+              golferRounds[g.name].push(score);
+            }
+          });
         });
+      });
+    });
 
-      if (container.innerHTML) {
-        awardsSection.parentNode.insertBefore(container, awardsSection);
+    // 1. Most Titles
+    const titleEntries = Object.entries(teamWins).sort((a, b) => b[1] - a[1]);
+    if (titleEntries.length) {
+      const [name, count] = titleEntries[0];
+      awards.push({
+        emoji: '🏆', title: 'Most Titles', subtitle: 'Team with the most pool wins',
+        winner: name, detail: count + ' title' + (count !== 1 ? 's' : '') + ' won across all majors'
+      });
+    }
+
+    // 2. All-Time Low Round
+    if (allRounds.length) {
+      const best = allRounds.reduce((a, b) => a.score < b.score ? a : b);
+      awards.push({
+        emoji: '🔥', title: 'All-Time Low Round', subtitle: 'Lowest single round by any drafted golfer',
+        winner: best.golferName + ' · ' + best.score,
+        detail: 'R' + best.roundNum + ' at ' + best.tourney + ' (drafted by ' + best.teamName + ')'
+      });
+    }
+
+    // 3. Best Draft Pick (lowest toPar, non-cut)
+    const nonCutGolfers = allGolferToPar.filter(g => !g.isCut);
+    if (nonCutGolfers.length) {
+      const best = nonCutGolfers.reduce((a, b) => a.toPar < b.toPar ? a : b);
+      awards.push({
+        emoji: '💎', title: 'Best Draft Pick', subtitle: 'Golfer with the best to-par across all tournaments',
+        winner: best.golferName + ' (' + fmtToPar(best.toPar) + ')',
+        detail: best.tourney + ', drafted by ' + best.teamName
+      });
+    }
+
+    // 4. Worst Draft Pick (highest toPar, non-cut)
+    if (nonCutGolfers.length) {
+      const worst = nonCutGolfers.reduce((a, b) => a.toPar > b.toPar ? a : b);
+      awards.push({
+        emoji: '💀', title: 'Worst Draft Pick', subtitle: 'Highest to-par (excluding cut golfers)',
+        winner: worst.golferName + ' (' + fmtToPar(worst.toPar) + ')',
+        detail: worst.tourney + ', drafted by ' + worst.teamName
+      });
+    }
+
+    // 5. Best Single Tournament (team)
+    if (teamToParByTourney.length) {
+      const best = teamToParByTourney.reduce((a, b) => a.toPar < b.toPar ? a : b);
+      awards.push({
+        emoji: '📈', title: 'Best Single Tournament', subtitle: 'Best team to-par in a single major',
+        winner: best.name + ' (' + fmtToPar(best.toPar) + ')',
+        detail: best.tourney
+      });
+    }
+
+    // 6. Cut Casualties
+    awards.push({
+      emoji: '🪓', title: 'Cut Casualties', subtitle: 'Total drafted golfers who missed the cut',
+      winner: cutCount + ' Missed',
+      detail: 'Across ' + archives.length + ' tournament' + (archives.length !== 1 ? 's' : '')
+    });
+
+    // 7. Most Consistent golfer (smallest round spread, min 4 rounds)
+    const consistentCandidates = Object.entries(golferRounds)
+      .filter(([, rounds]) => rounds.length >= 4)
+      .map(([name, rounds]) => {
+        const spread = Math.max(...rounds) - Math.min(...rounds);
+        return { name, spread, rounds };
+      })
+      .sort((a, b) => a.spread - b.spread);
+
+    if (consistentCandidates.length) {
+      const best = consistentCandidates[0];
+      awards.push({
+        emoji: '🎯', title: 'Most Consistent', subtitle: 'Smallest spread between best and worst round',
+        winner: best.name,
+        detail: best.spread + '-stroke spread (rounds: ' + best.rounds.join(', ') + ')'
+      });
+    }
+
+    // 8. Career Average (best avg finish position)
+    const avgEntries = Object.entries(teamPlacements)
+      .filter(([, arr]) => arr.length > 0)
+      .map(([name, arr]) => ({ name, avg: arr.reduce((a, b) => a + b, 0) / arr.length, count: arr.length }))
+      .sort((a, b) => a.avg - b.avg);
+
+    if (avgEntries.length) {
+      const best = avgEntries[0];
+      awards.push({
+        emoji: '📊', title: 'Career Average', subtitle: 'Best average finish position',
+        winner: best.name,
+        detail: best.avg.toFixed(1) + ' avg placement across ' + best.count + ' major' + (best.count !== 1 ? 's' : '')
+      });
+    }
+
+    grid.innerHTML = awards.map(a => `
+      <div class="award">
+        <span class="emoji">${a.emoji}</span>
+        <div class="title">${a.title}</div>
+        <div class="subtitle">${a.subtitle}</div>
+        <div class="winner">${a.winner}</div>
+        <div class="detail">${a.detail}</div>
+      </div>
+    `).join('');
+  }
+
+  // ============ UPDATE SEASON TRACKER ============
+  function updateSeasonTracker(archives) {
+    // Map archives by major
+    const byMajor = {};
+    archives.forEach(a => {
+      const key = a.major || a.theme;
+      if (key) byMajor[key] = a;
+    });
+
+    // Update PGA score if available
+    if (byMajor.pga) {
+      const pgaResults = byMajor.pga.teamResults || byMajor.pga.standings || [];
+      if (pgaResults.length) {
+        const pgaScore = document.getElementById('pga-score');
+        if (pgaScore) pgaScore.textContent = fmtToPar(pgaResults[0].toPar);
       }
-    } catch (e) { console.warn('archives load failed', e); }
+    }
+
+    // Update any other completed majors found in archives
+    ['usopen', 'open'].forEach(key => {
+      if (!byMajor[key]) return;
+      const a = byMajor[key];
+      const results = a.teamResults || a.standings || [];
+      if (!results.length) return;
+      const card = document.querySelector(`.major-card[data-major="${key}"]`);
+      if (!card) return;
+      // Mark as completed
+      card.classList.add('completed');
+      const statusLine = card.querySelector('.status-line');
+      if (statusLine) {
+        statusLine.className = 'status-line status-completed';
+        statusLine.innerHTML = '<span class="status-dot"></span><span>Completed</span>';
+      }
+      // Add winner line if missing
+      if (!card.querySelector('.winner-line')) {
+        const wl = document.createElement('div');
+        wl.className = 'winner-line';
+        wl.innerHTML = `
+          <span class="label">Pool Winner</span>
+          <span class="name-line">${a.winner || results[0].name}</span>
+          <span class="score">${fmtToPar(results[0].toPar)}</span>
+        `;
+        card.appendChild(wl);
+      }
+    });
+  }
+
+  // ============ TROPHY THEME SWITCHING ============
+  document.querySelectorAll('.trophy').forEach(trophy => {
+    const theme = trophy.dataset.theme;
+    trophy.addEventListener('mouseenter', () => {
+      document.body.className = 'theme-' + theme;
+    });
+    trophy.addEventListener('mouseleave', () => {
+      document.body.className = 'theme-masters';
+    });
+  });
+  document.body.className = 'theme-masters';
+
+  // ============ INIT ============
+  (async function init() {
+    // Default team colors (fallback before config loads)
+    window._TEAM_COLORS = {
+      Tagan: '#f9e076',
+      Jepic: '#4ade80',
+      Bigra: '#f87171',
+      Max: '#60a5fa',
+      Coletti: '#a78bfa'
+    };
+
+    let archives = [];
+    let config = null;
+
+    // Fetch archives and config in parallel
+    try {
+      const [archivesRes, configRes] = await Promise.all([
+        fetch(WORKER_URL + '/archives').then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch(WORKER_URL + '/config').then(r => r.ok ? r.json() : null).catch(() => null)
+      ]);
+
+      if (archivesRes && archivesRes.archives) {
+        archives = archivesRes.archives.filter(a => a && a.id);
+      }
+      if (configRes) config = configRes;
+    } catch (e) {
+      console.warn('Failed to fetch data:', e);
+    }
+
+    // Apply player colors from config
+    if (config && config.players) {
+      config.players.forEach(p => {
+        if (p.name && p.color) window._TEAM_COLORS[p.name] = p.color;
+      });
+    }
+
+    // Merge Masters fallback if not present in archives
+    const hasMasters = archives.some(a => a.major === 'masters' || a.id === 'masters-2026');
+    if (!hasMasters) {
+      archives.unshift(MASTERS_FALLBACK);
+    }
+
+    // Sort archives: most recent first (by extracting year, then by major order)
+    const majorOrder = { masters: 0, pga: 1, usopen: 2, open: 3 };
+    archives.sort((a, b) => {
+      const yA = parseInt((a.name || a.id || '').match(/20\d{2}/)?.[0] || '0');
+      const yB = parseInt((b.name || b.id || '').match(/20\d{2}/)?.[0] || '0');
+      if (yB !== yA) return yB - yA;
+      return (majorOrder[a.major] || 99) - (majorOrder[b.major] || 99);
+    });
+
+    // Render everything
+    renderPlayerCards(archives, config);
+    renderTournamentHistory(archives);
+    renderSuperlatives(archives);
+    updateSeasonTracker(archives);
   })();
 </script>
 </body>
